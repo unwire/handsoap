@@ -27,9 +27,9 @@ module Handsoap
       def parse_ns(name)
         matches = name.match /^([^:]+):(.*)$/
         if matches
-          [matches[1], matches[2]]
+          [matches[1] == '*' ? @prefix : matches[1], matches[2]]
         else
-          [@prefix, name]
+          [nil, name]
         end
       end
       private :parse_ns
@@ -81,9 +81,9 @@ module Handsoap
     class Element < Node
       def initialize(parent, prefix, node_name, value = nil)
         super()
-        if prefix.to_s == ""
-          raise "missing prefix"
-        end
+#         if prefix.to_s == ""
+#           raise "missing prefix"
+#         end
         @parent = parent
         @prefix = prefix
         @node_name = node_name
@@ -97,7 +97,7 @@ module Handsoap
         end
       end
       def full_name
-        @prefix + ":" + @node_name
+        @prefix.nil? ? @node_name : (@prefix + ":" + @node_name)
       end
       def append_child(node)
         if value_node?
@@ -153,7 +153,7 @@ module Handsoap
       end
       def to_s
         # todo resolve attribute prefixes aswell
-        if not defines_namespace?(@prefix)
+        if @prefix && (not defines_namespace?(@prefix))
           set_attr "xmlns:#{@prefix}", get_namespace(@prefix)
         end
         name = XmlMason.html_escape(full_name)
