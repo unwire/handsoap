@@ -107,8 +107,9 @@ module Handsoap
     def self.get_mapping(name)
       @mapping[name] if @mapping
     end
+    @@instance = {}
     def self.instance
-      @@instance ||= self.new
+      @@instance[self.to_s] ||= self.new
     end
     def self.method_missing(method, *args)
       if instance.respond_to?(method)
