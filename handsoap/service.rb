@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'rubygems'
-require 'httpclient'
 require 'nokogiri'
+require 'curb'
 require 'handsoap/xml_mason'
 
 module Handsoap
@@ -9,21 +9,18 @@ module Handsoap
   SOAP_NAMESPACE = { 1 => 'http://schemas.xmlsoap.org/soap/envelope/', 2 => 'http://www.w3.org/2001/12/soap-encoding' }
 
   class Response
-    def initialize(http_response, soap_namespace)
-      @http_response = http_response
+    def initialize(http_body, soap_namespace)
+      @http_body = http_body
       @soap_namespace = soap_namespace
       @document = :lazy
       @fault = :lazy
-    end
-    def http_response
-      @http_response
     end
     def document?
       !! document
     end
     def document
       if @document == :lazy
-        doc = Nokogiri::XML(http_response.content)
+        doc = Nokogiri::XML(@http_body)
         @document = (doc && doc.root && doc.errors.empty?) ? doc : nil
       end
       return @document
@@ -92,14 +89,6 @@ module Handsoap
         @create_document_callback.call doc
       end
     end
-    def self.on_create_http(&block)
-      @create_http_callback = block
-    end
-    def self.fire_on_create_http(http)
-      if @create_http_callback
-        @create_http_callback.call http
-      end
-    end
     def self.uri
       @uri
     end
@@ -146,13 +135,6 @@ module Handsoap
         end
       end
     end
-    def http
-      if @http.nil?
-        @http = HTTPClient.new
-        self.class.fire_on_create_http @http
-      end
-      return @http
-    end
     def dispatch(doc)
       headers = {
         "Content-Type" => "text/xml;charset=UTF-8"
@@ -166,15 +148,17 @@ module Handsoap
         logger.puts "---"
         logger.puts body
       end
-      response = http.post(self.class.uri, body, headers)
+      http_client = Curl::Easy.new(self.class.uri)
+      http_client.headers = headers
+      http_client.http_post body
       debug do |logger|
         logger.puts "--- Response ---"
-        logger.puts "HTTP Status: %s" % [response.status]
-        logger.puts "Content-Type: %s" % [response.contenttype]
+        logger.puts "HTTP Status: %s" % [http_client.response_code]
+        logger.puts "Content-Type: %s" % [http_client.content_type]
         logger.puts "---"
-        logger.puts Handsoap.pretty_format_envelope(response.content)
+        logger.puts Handsoap.pretty_format_envelope(http_client.body_str)
       end
-      soap_response = Response.new(response, self.class.envelope_namespace)
+      soap_response = Response.new(http_client.body_str, self.class.envelope_namespace)
       if soap_response.fault?
         raise soap_response.fault
       end
