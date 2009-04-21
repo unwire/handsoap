@@ -144,7 +144,7 @@ Repeat code inside the invoke-block, should be refactored out to *builders*, and
 
 ###Helpers
 
-You'd end up with two kinds of helpers; Ruby->XML transformers (aka. *builders*) and XML->Ruby transformers (aka. *parsers*).
+You'll end up with two kinds of helpers; Ruby->XML transformers (aka. *builders*) and XML->Ruby transformers (aka. *parsers*).
 It's recommended that you stick to the following style/naming scheme:
 
     # icon -> xml
@@ -176,3 +176,13 @@ or, if you prefer, you can use a class to represent entities:
                :type => node['type']
     end
 
+License
+---
+
+Copyright: [Unwire A/S](http://www.unwire.dk), 2009
+
+License: ???
+
+___
+
+troelskn@gmail.com - April, 2009
