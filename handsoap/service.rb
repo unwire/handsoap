@@ -39,7 +39,7 @@ module Handsoap
     end
     def fault
       if @fault == :lazy
-        nodes = document? ? document.xpath('/env:Envelope/env:Body/env:Fault', { 'env' => @soap_namespace }) : []
+        nodes = document? ? document.xpath('/env:Envelope/env:Body/descendant-or-self::env:Fault', { 'env' => @soap_namespace }) : []
         @fault = nodes.any? ? Fault.from_xml(nodes.first, :namespace => @soap_namespace) : nil
       end
       return @fault
@@ -136,6 +136,11 @@ module Handsoap
         dispatch doc
       end
     end
+    def on_before_dispatch
+    end
+    def on_fault(fault)
+      raise fault
+    end
     private
     def debug(message = nil)
       if @@logger
@@ -148,6 +153,7 @@ module Handsoap
       end
     end
     def dispatch(doc)
+      on_before_dispatch()
       headers = {
         "Content-Type" => "text/xml;charset=UTF-8"
       }
@@ -184,7 +190,7 @@ module Handsoap
         soap_response = Response.new(response.content, self.class.envelope_namespace)
       end
       if soap_response.fault?
-        raise soap_response.fault
+        return self.on_fault(soap_response.fault)
       end
       return soap_response
     end
@@ -205,7 +211,7 @@ module Handsoap
   end
 
   def self.pretty_format_envelope(xml_string)
-    if /^<.*:Envelope.*<\/.*:Envelope>$/.match(xml_string)
+    if /^<.*:Envelope/.match(xml_string)
       begin
         doc = Nokogiri::XML(xml_string)
       rescue Exception => ex
