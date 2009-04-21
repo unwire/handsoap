@@ -6,11 +6,12 @@ require 'handsoap/xml_mason'
 
 module Handsoap
 
-  SOAP_NAMESPACE = 'http://schemas.xmlsoap.org/soap/envelope/'
+  SOAP_NAMESPACE = { 1 => 'http://schemas.xmlsoap.org/soap/envelope/', 2 => 'http://www.w3.org/2001/12/soap-encoding' }
 
   class Response
-    def initialize(http_response)
+    def initialize(http_response, soap_namespace)
       @http_response = http_response
+      @soap_namespace = soap_namespace
       @document = :lazy
       @fault = :lazy
     end
@@ -32,8 +33,8 @@ module Handsoap
     end
     def fault
       if @fault == :lazy
-        nodes = document? ? document.xpath('/env:Envelope/env:Body/env:Fault', { 'env' => SOAP_NAMESPACE }) : false
-        @fault = nodes.any? ? Fault.from_xml(nodes.first) : nil
+        nodes = document? ? document.xpath('/env:Envelope/env:Body/env:Fault', { 'env' => @soap_namespace }) : []
+        @fault = nodes.any? ? Fault.from_xml(nodes.first, :namespace => @soap_namespace) : nil
       end
       return @fault
     end
@@ -48,8 +49,8 @@ module Handsoap
     def to_s
       "Handsoap::Fault { :code => '#{@code}', :reason => '#{@reason}' }"
     end
-    def self.from_xml(node)
-      ns = { 'env' => SOAP_NAMESPACE }
+    def self.from_xml(node, options = { :namespace => nil })
+      ns = { 'env' => options[:namespace] }
       fault_code = node.xpath('./env:Code/env:Value/text()', ns).to_s
       if fault_code == ""
         fault_code = node.xpath('./faultcode/text()', ns).to_s
@@ -66,6 +67,13 @@ module Handsoap
     @@logger = nil
     def self.logger=(io)
       @@logger = io
+    end
+    @protocol_version = 2
+    def self.protocol_version(version)
+      @protocol_version = version
+    end
+    def self.envelope_namespace
+      SOAP_NAMESPACE[@protocol_version]
     end
     def self.endpoint(uri)
       @uri = uri
@@ -166,7 +174,7 @@ module Handsoap
         logger.puts "---"
         logger.puts Handsoap.pretty_format_envelope(response.content)
       end
-      soap_response = Response.new(response)
+      soap_response = Response.new(response, self.class.envelope_namespace)
       if soap_response.fault?
         raise soap_response.fault
       end
@@ -174,7 +182,7 @@ module Handsoap
     end
     def make_envelope
       doc = XmlMason::Document.new do |doc|
-        doc.alias 'env', "http://www.w3.org/2003/05/soap-envelope"
+        doc.alias 'env', self.class.envelope_namespace
         doc.add "env:Envelope" do |env|
           env.add "*:Header"
           env.add "*:Body"

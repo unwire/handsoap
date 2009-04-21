@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<con:soapui-project name="wstf-sc002" soapui-version="2.5.1" xmlns:con="http://eviware.com/soapui/config"><con:settings><con:setting id="ProjectSettings@projectRoot">/home/tkn/public/naked-soap</con:setting></con:settings><con:interface xsi:type="con:WsdlInterface" wsaVersion="NONE" name="sc002SOAP11Binding" type="wsdl" bindingName="{http://www.wstf.org/docs/scenarios/sc002}sc002SOAP11Binding" soapVersion="1_1" anonymous="optional" definition="http://www.wstf.org/docs/scenarios/sc002/sc002.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache/><con:endpoints><con:endpoint>http://www.wstf.org/sc002/sc002SOAP11</con:endpoint></con:endpoints><con:operation isOneWay="false" action="" name="Begin" bindingOperationName="Begin" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://www.wstf.org/sc002/sc002SOAP11</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
+<con:soapui-project name="wstf-sc002" soapui-version="2.5.1" resourceRoot="" xmlns:con="http://eviware.com/soapui/config"><con:settings><con:setting id="ProjectSettings@projectRoot">/home/tkn/public/handsoap/tests</con:setting></con:settings><con:interface xsi:type="con:WsdlInterface" wsaVersion="NONE" name="sc002SOAP11Binding" type="wsdl" bindingName="{http://www.wstf.org/docs/scenarios/sc002}sc002SOAP11Binding" soapVersion="1_1" anonymous="optional" definition="http://www.wstf.org/docs/scenarios/sc002/sc002.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache/><con:endpoints><con:endpoint>http://www.wstf.org/sc002/sc002SOAP11</con:endpoint><con:endpoint>http://127.0.0.1:8088/mocksc002SOAP11Binding</con:endpoint></con:endpoints><con:operation isOneWay="false" action="" name="Begin" bindingOperationName="Begin" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://www.wstf.org/sc002/sc002SOAP11</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
    <soapenv:Header>
       <sc0:SessionData>
          <sc0:ID>?</sc0:ID>
@@ -538,4 +538,26 @@
    <soap:Body>
       <sc0:SendMessagesResponse/>
    </soap:Body>
-</soap:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.wstf.org/docs/scenarios/sc002/sc002Port/SendMessagesResponse"/></con:response><con:dispatchConfig/></con:mockOperation><con:properties/></con:mockService><con:properties/><con:wssContainer/></con:soapui-project>
+</soap:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.wstf.org/docs/scenarios/sc002/sc002Port/SendMessagesResponse"/></con:response><con:dispatchConfig/></con:mockOperation><con:properties/></con:mockService><con:mockService port="8088" path="/mocksc002SOAP11Binding" name="sc002SOAP11BindingMockService"><con:settings/><con:mockOperation name="Begin" interface="sc002SOAP11Binding" operation="Begin"><con:settings/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:defaultResponse>Response 1</con:defaultResponse><con:response name="Response 1" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <sc0:BeginResponse/>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.wstf.org/docs/scenarios/sc002/sc002Port/BeginResponse"/></con:response><con:dispatchConfig/></con:mockOperation><con:mockOperation name="Echo" interface="sc002SOAP11Binding" operation="Echo"><con:settings/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:defaultResponse>Response 1</con:defaultResponse><con:response name="Response 1" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <sc0:EchoResponse>
+         <sc0:text>?</sc0:text>
+      </sc0:EchoResponse>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.wstf.org/docs/scenarios/sc002/sc002Port/EchoResponse"/></con:response><con:dispatchConfig/></con:mockOperation><con:mockOperation name="End" interface="sc002SOAP11Binding" operation="End"><con:settings/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:defaultResponse>Response 1</con:defaultResponse><con:response name="Response 1" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <sc0:EndResponse/>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.wstf.org/docs/scenarios/sc002/sc002Port/EndResponse"/></con:response><con:dispatchConfig/></con:mockOperation><con:mockOperation name="Notify" interface="sc002SOAP11Binding" operation="Notify"><con:settings/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:defaultResponse>Response 1</con:defaultResponse><con:response name="Response 1" encoding="UTF-8"><con:settings/><con:responseContent/><con:wsaConfig mustUnderstand="NONE" version="200508"/></con:response><con:dispatchConfig/></con:mockOperation><con:mockOperation name="SendMessages" interface="sc002SOAP11Binding" operation="SendMessages"><con:settings/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:defaultResponse>Response 1</con:defaultResponse><con:response name="Response 1" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <sc0:SendMessagesResponse/>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.wstf.org/docs/scenarios/sc002/sc002Port/SendMessagesResponse"/></con:response><con:dispatchConfig/></con:mockOperation><con:properties/></con:mockService><con:properties/><con:wssContainer/></con:soapui-project>
