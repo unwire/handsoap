@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
 require 'rubygems'
+require 'httpclient'
 require 'nokogiri'
 require 'curb'
 require 'handsoap/xml_mason'
 
 module Handsoap
+
+  def self.http_driver
+    @http_driver || :curb
+  end
+
+  def self.http_driver=(driver)
+    @http_driver = driver
+  end
 
   SOAP_NAMESPACE = { 1 => 'http://schemas.xmlsoap.org/soap/envelope/', 2 => 'http://www.w3.org/2001/12/soap-encoding' }
 
@@ -151,17 +160,29 @@ module Handsoap
         logger.puts "---"
         logger.puts body
       end
-      http_client = Curl::Easy.new(self.class.uri)
-      http_client.headers = headers
-      http_client.http_post body
-      debug do |logger|
-        logger.puts "--- Response ---"
-        logger.puts "HTTP Status: %s" % [http_client.response_code]
-        logger.puts "Content-Type: %s" % [http_client.content_type]
-        logger.puts "---"
-        logger.puts Handsoap.pretty_format_envelope(http_client.body_str)
+      if Handsoap.http_driver == :curb
+        http_client = Curl::Easy.new(self.class.uri)
+        http_client.headers = headers
+        http_client.http_post body
+        debug do |logger|
+          logger.puts "--- Response ---"
+          logger.puts "HTTP Status: %s" % [http_client.response_code]
+          logger.puts "Content-Type: %s" % [http_client.content_type]
+          logger.puts "---"
+          logger.puts Handsoap.pretty_format_envelope(http_client.body_str)
+        end
+        soap_response = Response.new(http_client.body_str, self.class.envelope_namespace)
+      else
+        response = HTTPClient.new.post(self.class.uri, body, headers)
+        debug do |logger|
+          logger.puts "--- Response ---"
+          logger.puts "HTTP Status: %s" % [response.status]
+          logger.puts "Content-Type: %s" % [response.contenttype]
+          logger.puts "---"
+          logger.puts Handsoap.pretty_format_envelope(response.content)
+        end
+        soap_response = Response.new(response.content, self.class.envelope_namespace)
       end
-      soap_response = Response.new(http_client.body_str, self.class.envelope_namespace)
       if soap_response.fault?
         raise soap_response.fault
       end
