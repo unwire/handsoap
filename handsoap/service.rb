@@ -95,11 +95,25 @@ module Handsoap
     def self.get_mapping(name)
       @mapping[name]
     end
-    def method_missing(name, &block)
-      invoke(name, &block)
+    def self.instance
+      @@instance ||= self.new
     end
-    def invoke(name, &block)
-      action = self.class.get_mapping(name)
+    def self.method_missing(method, *args)
+      if instance.respond_to?(method)
+        instance.__send__ method, args
+      else
+        super
+      end
+    end
+    def method_missing(method, *args)
+      action = self.class.get_mapping(method)
+      if action
+        invoke(action, *args)
+      else
+        super
+      end
+    end
+    def invoke(action, &block)
       if action
         doc = make_envelope do |body|
           body.add action
