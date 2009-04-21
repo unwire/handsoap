@@ -76,9 +76,11 @@ Recommendations
 
 1. Find the wsdl for the service you want to consume.
 
-2. Figure out the url for the endpoint, as well as the protocol version. (Look inside the wsdl)
+2. Figure out the url for the endpoint, as well as the protocol version.
+	 * To find the endpoint, look inside the wsdl, for `<soap:address location="..">`
 
-3. Create a service class. Add endpoints and protocol. Import needed namespace(s).
+3. Create a service class. Add endpoints and protocol. Alias needed namespace(s).
+   * To find the namespace(s), look in the samples from soapUI. It will be imported as `v1`
 
 4. Open the wsdl in [soapUI](http://www.soapui.org/).
 
