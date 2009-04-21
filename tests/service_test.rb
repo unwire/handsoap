@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-require '../handsoap'
+require 'handsoap'
 
 class TestService < Handsoap::Service
   endpoint 'http://127.0.0.1:8088/mocksc002SOAP12Binding'
