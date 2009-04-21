@@ -28,6 +28,21 @@ There are several benefits of using Handsoap:
 
 To summarise, soap4r takes an optimistic approach, where Handsoap expects things to fail. If soap4r works for you today, it's probably the better choice. If you find your self strugling with it, Handsoap will offer a more smooth ride. It won't magically fix things for you though.
 
+Handsoap vs. soap4r benchmark
+---
+
+Benchmarks are always unfair, but my experiments has placed Handsoap at being approximately double as fast as soap4r. I'd love any suggestions for a more precise measure.
+
+    $ ruby tests/benchmark_test.rb 1000
+    Benchmarking 1000 calls ...
+                    user     system      total        real
+    handsoap    0.750000   0.090000   0.840000 (  1.992437)
+    soap4r      2.240000   0.140000   2.380000 (  3.605836)
+    ---------------
+    Legend:
+    The user CPU time, system CPU time, the sum of the user and system CPU times,
+    and the elapsed real time. The unit of time is seconds.
+
 SOAP basics
 ---
 
@@ -75,7 +90,7 @@ Recommendations
 
 8. Write Ruby-code to parse the response (a Nokogiri XML-document) into Ruby data types.
 
-9. Write an integration test to verify that your method works as expected. You can use soapUI to generate a mock-service.
+9. Write an integration test to verify that your method works as expected. You can use soapUI to [generate a mock-service](http://www.soapui.org/userguide/mock/getting_started.html).
 
 Repeat point 5..9 for each method that you need to use.
 Between each iteration, you should refactor shared code into helper functions.

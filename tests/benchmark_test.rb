@@ -4,6 +4,14 @@ require 'soap/wsdlDriver'
 require 'soap/header/simplehandler'
 require 'benchmark'
 
+#
+# Start the mockservice with:
+#   sh ~/path/to/soapui-2.5.1/bin/mockservicerunner.sh -p 8088 tests/GoogleSearch-soapui-project.xml
+#
+# Run the benchmark with (100 tries):
+#   ruby tests/benchmark_test.rb 100
+#
+
 # handsoap mappings:
 
 class TestService < Handsoap::Service

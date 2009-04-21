@@ -51,6 +51,23 @@ ol.decimal { list-style-type: decimal; }
       ></ul
     ><p
     >To summarise, soap4r takes an optimistic approach, where Handsoap expects things to fail. If soap4r works for you today, it's probably the better choice. If you find your self strugling with it, Handsoap will offer a more smooth ride. It won't magically fix things for you though.</p
+    ><h2 id="handsoap-vs-soap4r-benchmark"
+    >Handsoap vs. soap4r benchmark</h2
+    ><p
+    >Benchmarks are always unfair, but my experiments has placed Handsoap at being approximately double as fast as soap4r. I'd love any suggestions for a more precise measure.</p
+    ><pre
+    ><code
+      >$ ruby tests/benchmark_test.rb 1000
+Benchmarking 1000 calls ...
+                user     system      total        real
+handsoap    0.750000   0.090000   0.840000 (  1.992437)
+soap4r      2.240000   0.140000   2.380000 (  3.605836)
+---------------
+Legend:
+The user CPU time, system CPU time, the sum of the user and system CPU times,
+and the elapsed real time. The unit of time is seconds.
+</code
+      ></pre
     ><h2 id="soap-basics"
     >SOAP basics</h2
     ><p
@@ -130,7 +147,9 @@ ol.decimal { list-style-type: decimal; }
 	></li
       ><li
       ><p
-	>Write an integration test to verify that your method works as expected. You can use soapUI to generate a mock-service.</p
+	>Write an integration test to verify that your method works as expected. You can use soapUI to <a href="http://www.soapui.org/userguide/mock/getting_started.html"
+	  >generate a mock-service</a
+	  >.</p
 	></li
       ></ol
     ><p
