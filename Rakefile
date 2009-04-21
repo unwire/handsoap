@@ -8,7 +8,6 @@ begin
 #    gemspec.homepage = "http://github.com/foo/bar"
     gemspec.description = gemspec.summary
     gemspec.authors = ["Troels Knak-Nielsen"]
-    gemspec.extra_rdoc_files << "doc/handsoap.markdown"
     gemspec.add_dependency "nokogiri", ">= 1.2.3"
     gemspec.add_dependency "curb", ">= 0.3.2"
 #    gemspec.add_dependency "httpclient", ">= 2.1.2"

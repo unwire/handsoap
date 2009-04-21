@@ -10,9 +10,10 @@ Gem::Specification.new do |s|
   s.description = %q{Handsoap is a library for creating SOAP clients in Ruby}
   s.email = %q{troelskn@gmail.com}
   s.extra_rdoc_files = [
-    "doc/handsoap.markdown"
+    "README.markdown"
   ]
   s.files = [
+    "README.markdown",
     "Rakefile",
     "VERSION.yml",
     "lib/handsoap.rb",
