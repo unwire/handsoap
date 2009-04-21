@@ -100,7 +100,7 @@ module Handsoap
     end
     def self.method_missing(method, *args)
       if instance.respond_to?(method)
-        instance.__send__ method, args
+        instance.__send__ method, *args
       else
         super
       end
