@@ -2,8 +2,7 @@
 require 'handsoap'
 
 class TestService < Handsoap::Service
-  protocol_version 1
-  endpoint 'http://127.0.0.1:8088/mocksc002SOAP11Binding'
+  endpoint :uri => 'http://127.0.0.1:8088/mocksc002SOAP11Binding', :version => 1
   map_method :begin => "sc002:Begin"
   map_method :notify => "sc002:Notify"
   map_method :echo => "sc002:Echo"
@@ -16,7 +15,6 @@ class TestService < Handsoap::Service
 end
 
 Handsoap::Service.logger = $stdout
-# Handsoap.protocol_version = 1
 
 s = TestService.new
 

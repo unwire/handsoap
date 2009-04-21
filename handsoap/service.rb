@@ -47,6 +47,9 @@ module Handsoap
       "Handsoap::Fault { :code => '#{@code}', :reason => '#{@reason}' }"
     end
     def self.from_xml(node, options = { :namespace => nil })
+      if not options[:namespace]
+        raise "Missing option :namespace"
+      end
       ns = { 'env' => options[:namespace] }
       fault_code = node.xpath('./env:Code/env:Value/text()', ns).to_s
       if fault_code == ""
@@ -65,15 +68,15 @@ module Handsoap
     def self.logger=(io)
       @@logger = io
     end
-    @protocol_version = 2
-    def self.protocol_version(version)
-      @protocol_version = version
+    def self.endpoint(args = {})
+      @protocol_version = args[:version] || raise("Missing option :version")
+      @uri = args[:uri] || raise("Missing option :uri")
     end
     def self.envelope_namespace
+      if SOAP_NAMESPACE[@protocol_version].nil?
+        raise "Unknown protocol version '#{@protocol_version.inspect}'"
+      end
       SOAP_NAMESPACE[@protocol_version]
-    end
-    def self.endpoint(uri)
-      @uri = uri
     end
     def self.map_method(mapping)
       if @mapping.nil?
