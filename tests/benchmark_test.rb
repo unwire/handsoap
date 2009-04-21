@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+$LOAD_PATH.unshift File.expand_path(File.dirname(__FILE__) + "/../lib")
 require 'handsoap'
 require 'soap/wsdlDriver'
 require 'soap/header/simplehandler'
