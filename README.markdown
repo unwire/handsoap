@@ -76,7 +76,7 @@ Recommendations
 
 1. Find the wsdl for the service you want to consume.
 
-2. Figure out the url for the endpoint, as well as the protocol version.
+2. Figure out the url for the endpoint, as well as the protocol version. Put this in a config file.
 	 * To find the endpoint, look inside the wsdl, for `<soap:address location="..">`
 
 3. Create a service class. Add endpoints and protocol. Alias needed namespace(s).
@@ -97,6 +97,20 @@ Recommendations
 Repeat point 5..9 for each method that you need to use.
 Between each iteration, you should refactor shared code into helper functions.
 
+###Configuration
+
+If you use Rails, you should put the endpoint in a constant in the environment file. That way, you can have different endpoints for test/development/production/etc.
+
+If you don't use Rails, it's still a good idea to move this information to a config file.
+
+The configuration could look like this:
+
+    # wsdl: http://example.org/ws/service?WSDL
+    EXAMPLE_SERVICE_ENDPOINT = {
+      :uri => 'http://example.org/ws/service',
+      :version => 2
+    }
+
 ###Service class
 
 Put your service in a file under `app/models`. You should extend `Handsoap::Service`.
@@ -111,7 +125,7 @@ A typical service looks like the following:
     require 'handsoap'
 
     class Example::FooService < Handsoap::Service
-      endpoint :uri => 'http://example.org/ws/service', :version => 2
+      endpoint EXAMPLE_SERVICE_ENDPOINT
       on_create_document do |doc|
         doc.alias 'wsdl', "http://example.org/ws/spec"
       end
@@ -144,7 +158,7 @@ For the sample service above, you would create a file in `test/integration/examp
       end
     end
 
-Note the commented-out line. If you set a logger on the service-class, you can see the protocol-level interaction, which is useful for debugging.
+Note the commented-out line. If you set a logger on the service-class, you can see exactly which XML goes forth and back, which is very useful for debugging.
 
 ###Methods
 
