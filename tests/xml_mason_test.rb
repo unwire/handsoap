@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-require 'handsoap/xml_mason'
+require '../handsoap/xml_mason'
 
 doc = Handsoap::XmlMason::Document.new do |doc|
   doc.alias 'env', "http://www.w3.org/2003/05/soap-envelope"
