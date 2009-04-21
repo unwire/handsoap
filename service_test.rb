@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-require 'naked_soap'
+require 'handsoap'
 
-class TestService < NakedSOAP::Service
+class TestService < Handsoap::Service
   endpoint 'http://127.0.0.1:8088/mocksc002SOAP12Binding'
   map_method :begin => "sc002:Begin"
   map_method :notify => "sc002:Notify"
@@ -14,7 +14,7 @@ class TestService < NakedSOAP::Service
   end
 end
 
-NakedSOAP::Service.logger = $stdout
+Handsoap::Service.logger = $stdout
 s = TestService.new
 
 s.begin

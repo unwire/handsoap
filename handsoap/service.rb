@@ -2,9 +2,9 @@
 require 'rubygems'
 require 'httpclient'
 require 'nokogiri'
-require 'xml_mason'
+require 'handsoap/xml_mason'
 
-module NakedSOAP
+module Handsoap
 
   class Response
     def initialize(http_response)
