@@ -32,8 +32,8 @@ module Handsoap
     end
     def fault
       if @fault == :lazy
-        node = document? ? document.xpath('/env:Envelope/env:Body/env:Fault[0]', { 'env' => SOAP_NAMESPACE }) : false
-        @fault = node.any? ? Fault.from_xml(node) : nil
+        nodes = document? ? document.xpath('/env:Envelope/env:Body/env:Fault', { 'env' => SOAP_NAMESPACE }) : false
+        @fault = nodes.any? ? Fault.from_xml(nodes.first) : nil
       end
       return @fault
     end
@@ -44,6 +44,9 @@ module Handsoap
     def initialize(code, reason)
       @code = code
       @reason = reason
+    end
+    def to_s
+      "Handsoap::Fault { :code => '#{@code}', :reason => '#{@reason}' }"
     end
     def self.from_xml(node)
       ns = { 'env' => SOAP_NAMESPACE }
@@ -93,7 +96,7 @@ module Handsoap
       @uri
     end
     def self.get_mapping(name)
-      @mapping[name]
+      @mapping[name] if @mapping
     end
     def self.instance
       @@instance ||= self.new
