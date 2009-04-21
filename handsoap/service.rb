@@ -6,6 +6,8 @@ require 'handsoap/xml_mason'
 
 module Handsoap
 
+  SOAP_NAMESPACE = 'http://schemas.xmlsoap.org/soap/envelope/'
+
   class Response
     def initialize(http_response)
       @http_response = http_response
@@ -30,22 +32,30 @@ module Handsoap
     end
     def fault
       if @fault == :lazy
-        node = document? ? document.xpath('/env:Envelope/env:Body/env:Fault', { 'env' => 'http://www.w3.org/2003/05/soap-envelope' }) : false
+        node = document? ? document.xpath('/env:Envelope/env:Body/env:Fault', { 'env' => SOAP_NAMESPACE }) : false
         @fault = node ? Fault.from_xml(node) : nil
       end
       return @fault
     end
   end
 
-  class Fault
+  class Fault < Exception
     attr_reader :code, :reason
     def initialize(code, reason)
       @code = code
       @reason = reason
     end
     def self.from_xml(node)
-      ns = { 'env' => 'http://www.w3.org/2003/05/soap-envelope' }
-      self.new node.xpath('./env:Code/env:Value/text()', ns), node.xpath('./env:Reason/env:Text[1]/text()', ns)
+      ns = { 'env' => SOAP_NAMESPACE }
+      fault_code = node.xpath('./env:Code/env:Value/text()', ns).to_s
+      if fault_code == ""
+        fault_code = node.xpath('./faultcode/text()', ns).to_s
+      end
+      reason = node.xpath('./env:Reason/env:Text[1]/text()', ns).to_s
+      if reason == ""
+        reason = node.xpath('./faultstring/text()', ns).to_s
+      end
+      self.new(fault_code, reason)
     end
   end
 
@@ -121,11 +131,11 @@ module Handsoap
       debug "Content-Type: %s" % [response.contenttype]
       debug "---"
       debug response.content
-      if response.status < 400
-        return Response.new(response)
-      else
-        raise "Http Error #{response.status}"
+      soap_response = Response.new(response)
+      if soap_response.fault?
+        raise soap_response.fault
       end
+      return soap_response
     end
     def make_envelope
       doc = XmlMason::Document.new do |doc|
