@@ -32,8 +32,8 @@ module Handsoap
     end
     def fault
       if @fault == :lazy
-        node = document? ? document.xpath('/env:Envelope/env:Body/env:Fault', { 'env' => SOAP_NAMESPACE }) : false
-        @fault = node ? Fault.from_xml(node) : nil
+        node = document? ? document.xpath('/env:Envelope/env:Body/env:Fault[0]', { 'env' => SOAP_NAMESPACE }) : false
+        @fault = node.any? ? Fault.from_xml(node) : nil
       end
       return @fault
     end
@@ -95,7 +95,10 @@ module Handsoap
     def self.get_mapping(name)
       @mapping[name]
     end
-    def method_missing(name)
+    def method_missing(name, &block)
+      invoke(name, &block)
+    end
+    def invoke(name, &block)
       action = self.class.get_mapping(name)
       if action
         doc = make_envelope do |body|
@@ -108,8 +111,15 @@ module Handsoap
       end
     end
     private
-    def debug(message)
-      @@logger.puts(message) if @@logger
+    def debug(message = nil)
+      if @@logger
+        if message
+          @@logger.puts(message)
+        end
+        if block_given?
+          yield @@logger
+        end
+      end
     end
     def http
       if @http.nil?
@@ -119,18 +129,26 @@ module Handsoap
       return @http
     end
     def dispatch(doc)
-      debug "==============="
-      debug "--- Request ---"
-      debug "URI: %s" % [self.class.uri]
-      debug "---"
+      headers = {
+        "Content-Type" => "text/xml;charset=UTF-8"
+      }
       body = doc.to_s
-      debug body
-      response = http.post(self.class.uri, body)
-      debug "--- Response ---"
-      debug "HTTP Status: %s" % [response.status]
-      debug "Content-Type: %s" % [response.contenttype]
-      debug "---"
-      debug response.content
+      debug do |logger|
+        logger.puts "==============="
+        logger.puts "--- Request ---"
+        logger.puts "URI: %s" % [self.class.uri]
+        logger.puts headers.map { |key,value| key + ": " + value }.join("\n")
+        logger.puts "---"
+        logger.puts body
+      end
+      response = http.post(self.class.uri, body, headers)
+      debug do |logger|
+        logger.puts "--- Response ---"
+        logger.puts "HTTP Status: %s" % [response.status]
+        logger.puts "Content-Type: %s" % [response.contenttype]
+        logger.puts "---"
+        logger.puts Handsoap.pretty_format_envelope(response.content)
+      end
       soap_response = Response.new(response)
       if soap_response.fault?
         raise soap_response.fault
@@ -141,8 +159,8 @@ module Handsoap
       doc = XmlMason::Document.new do |doc|
         doc.alias 'env', "http://www.w3.org/2003/05/soap-envelope"
         doc.add "env:Envelope" do |env|
-          env.add "Header"
-          env.add "Body"
+          env.add "*:Header"
+          env.add "*:Body"
         end
       end
       self.class.fire_on_create_document doc
@@ -151,6 +169,19 @@ module Handsoap
       end
       return doc
     end
+  end
+
+  def self.pretty_format_envelope(xml_string)
+    if /^<.*:Envelope.*<\/.*:Envelope>$/.match(xml_string)
+      begin
+        doc = Nokogiri::XML(xml_string)
+      rescue Exception => ex
+        return "Formatting failed: " + ex.to_s
+      end
+      return doc.to_s
+      # return "\n\e[1;33m" + doc.to_s + "\e[0m"
+    end
+    return xml_string
   end
 
 end
