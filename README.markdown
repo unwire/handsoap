@@ -111,6 +111,10 @@ The configuration could look like this:
       :version => 2
     }
 
+If you use Rails, you will need to load the gem from the `config/environment.rb` file, using:
+
+    config.gem 'troelskn-handsoap', :lib => 'handsoap', :source => "http://gems.github.com"
+
 ###Service class
 
 Put your service in a file under `app/models`. You should extend `Handsoap::Service`.
