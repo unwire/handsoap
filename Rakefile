@@ -5,7 +5,7 @@ begin
     gemspec.name = "handsoap"
     gemspec.summary = "Handsoap is a library for creating SOAP clients in Ruby"
     gemspec.email = "troelskn@gmail.com"
-#    gemspec.homepage = "http://github.com/foo/bar"
+    gemspec.homepage = "http://github.com/troelskn/handsoap"
     gemspec.description = gemspec.summary
     gemspec.authors = ["Troels Knak-Nielsen"]
     gemspec.add_dependency "nokogiri", ">= 1.2.3"

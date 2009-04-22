@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Troels Knak-Nielsen"]
-  s.date = %q{2009-04-07}
+  s.date = %q{2009-04-22}
   s.description = %q{Handsoap is a library for creating SOAP clients in Ruby}
   s.email = %q{troelskn@gmail.com}
   s.extra_rdoc_files = [
@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
     "lib/handsoap/xml_mason.rb"
   ]
   s.has_rdoc = true
+  s.homepage = %q{http://github.com/troelskn/handsoap}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.1}
