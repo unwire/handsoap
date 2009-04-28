@@ -14,9 +14,9 @@ module Handsoap
       def initialize
         @namespaces = {}
       end
-      def add(node_name, value = nil)
+      def add(node_name, value = nil, options = {})
         prefix, name = parse_ns(node_name)
-        node = append_child Element.new(self, prefix, name, value)
+        node = append_child Element.new(self, prefix, name, value, options)
         if block_given?
           yield node
         end
@@ -73,13 +73,13 @@ module Handsoap
       def initialize(text)
         @text = text
       end
-      def to_s
-        XmlMason.html_escape @text
+      def to_s(indentation = '')
+        XmlMason.html_escape(@text).gsub(/\n/, "\n" + indentation)
       end
     end
 
     class Element < Node
-      def initialize(parent, prefix, node_name, value = nil)
+      def initialize(parent, prefix, node_name, value = nil, options = {})
         super()
 #         if prefix.to_s == ""
 #           raise "missing prefix"
@@ -89,6 +89,7 @@ module Handsoap
         @node_name = node_name
         @children = []
         @attributes = {}
+        @indent_children = options[:indent] != false # default to true, can override to false
         if not value.nil?
           set_value value.to_s
         end
@@ -151,7 +152,7 @@ module Handsoap
       def defines_namespace?(prefix)
         @attributes.keys.include?("xmlns:#{prefix}") || @parent.defines_namespace?(prefix)
       end
-      def to_s
+      def to_s(indentation = '')
         # todo resolve attribute prefixes aswell
         if @prefix && (not defines_namespace?(@prefix))
           set_attr "xmlns:#{@prefix}", get_namespace(@prefix)
@@ -159,14 +160,15 @@ module Handsoap
         name = XmlMason.html_escape(full_name)
         attr = (@attributes.any? ? (" " + @attributes.map { |key, value| XmlMason.html_escape(key) + '="' + XmlMason.html_escape(value) + '"' }.join(" ")) : "")
         if @children.any?
+          child_indent = @indent_children ? (indentation + "  ") : ""
           if value_node?
-            children = @children[0].to_s
+            children = @children[0].to_s(child_indent)
           else
-            children = @children.map { |node| "\n" + node.to_s }.join("").gsub(/\n/, "\n  ") + "\n"
+            children = @children.map { |node| "\n" + node.to_s(child_indent) }.join("") + "\n" + indentation
           end
-          "<" + name + attr + ">" + children + "</" + name + ">"
+          indentation + "<" + name + attr + ">" + children + "</" + name + ">"
         else
-          "<" + name + attr + " />"
+          indentation + "<" + name + attr + " />"
         end
       end
     end

@@ -50,3 +50,11 @@ end
 puts doc
 # puts doc.find("Body")
 # puts doc.find_all("departureTime")
+
+doc = Handsoap::XmlMason::Document.new do |doc|
+  doc.add 'body' do |b|
+    b.add 'yonks', "lorem\nipsum\ndolor\nsit amet", :indent => false
+  end
+end
+
+puts doc
