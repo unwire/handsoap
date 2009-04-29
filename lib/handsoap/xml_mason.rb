@@ -14,9 +14,9 @@ module Handsoap
       def initialize
         @namespaces = {}
       end
-      def add(node_name, value = nil, options = {})
+      def add(node_name, value = nil)
         prefix, name = parse_ns(node_name)
-        node = append_child Element.new(self, prefix, name, value, options)
+        node = append_child Element.new(self, prefix, name, value)
         if block_given?
           yield node
         end
@@ -74,12 +74,12 @@ module Handsoap
         @text = text
       end
       def to_s(indentation = '')
-        XmlMason.html_escape(@text).gsub(/\n/, "\n" + indentation)
+        XmlMason.html_escape(@text)
       end
     end
 
     class Element < Node
-      def initialize(parent, prefix, node_name, value = nil, options = {})
+      def initialize(parent, prefix, node_name, value = nil)
         super()
 #         if prefix.to_s == ""
 #           raise "missing prefix"
@@ -89,7 +89,6 @@ module Handsoap
         @node_name = node_name
         @children = []
         @attributes = {}
-        @indent_children = options[:indent] != false # default to true, can override to false
         if not value.nil?
           set_value value.to_s
         end
@@ -160,11 +159,10 @@ module Handsoap
         name = XmlMason.html_escape(full_name)
         attr = (@attributes.any? ? (" " + @attributes.map { |key, value| XmlMason.html_escape(key) + '="' + XmlMason.html_escape(value) + '"' }.join(" ")) : "")
         if @children.any?
-          child_indent = @indent_children ? (indentation + "  ") : ""
           if value_node?
-            children = @children[0].to_s(child_indent)
+            children = @children[0].to_s(indentation + "  ")
           else
-            children = @children.map { |node| "\n" + node.to_s(child_indent) }.join("") + "\n" + indentation
+            children = @children.map { |node| "\n" + node.to_s(indentation + "  ") }.join("") + "\n" + indentation
           end
           indentation + "<" + name + attr + ">" + children + "</" + name + ">"
         else

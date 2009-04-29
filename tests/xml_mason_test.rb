@@ -53,7 +53,7 @@ puts doc
 
 doc = Handsoap::XmlMason::Document.new do |doc|
   doc.add 'body' do |b|
-    b.add 'yonks', "lorem\nipsum\ndolor\nsit amet", :indent => false
+    b.add 'yonks', "lorem\nipsum\ndolor\nsit amet"
   end
 end
 
