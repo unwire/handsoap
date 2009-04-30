@@ -4,6 +4,7 @@ require 'cgi'
 require 'nokogiri'
 
 # TODO: inline builders, if they are only ever used in one place
+# TODO: http://www.crossedconnections.org/w/?p=51 -- The 'typens' namespace is magical ...
 
 class Builders
   def initialize(xsd)
