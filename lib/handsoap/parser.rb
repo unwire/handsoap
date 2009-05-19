@@ -90,6 +90,10 @@ module Handsoap
         @xsd = xsd
       end
 
+      def namespaces
+        @xsd.wsdl[:document].collect_namespaces
+      end
+
       def messages
         # <message name="KeywordSearchRequest">
         #   <part name="KeywordSearchRequest" type="typens:KeywordRequest"/>
@@ -108,9 +112,9 @@ module Handsoap
         @messages = {}
         wsdl.xpath('//wsdl:message', ns_wsdl).each do |xml_message|
           name = xml_message['name']
-          @messages[name] = {}
+          @messages[name] = []
           xml_message.xpath('./wsdl:part', ns_wsdl).each do |xml_part|
-            @messages[name][xml_part['name']] = Part.new(xml_part['name'], QName.new(xml_part['type'] || xml_part['element'], wsdl.namespaces))
+            @messages[name] << Part.new(xml_part['name'], QName.new(xml_part['type'] || xml_part['element'], wsdl.namespaces))
           end
         end
         return @messages
@@ -174,17 +178,21 @@ module Handsoap
         #     :operations => {
         #       'KeywordSearchRequest' => Operation(
         #         :soap_action => 'http://soap.amazon.com',
-        #         :bodies => {
-        #           'input' => Body(
-        #             :use => 'encoded',
-        #             :encoding_style => 'http://schemas.xmlsoap.org/soap/encoding/',
-        #             :namespace => 'http://soap.amazon.com'
-        #           ),
-        #           'output' => Body(
-        #             :use => 'encoded',
-        #             :encoding_style => 'http://schemas.xmlsoap.org/soap/encoding/',
-        #             :namespace => 'http://soap.amazon.com'
-        #           )
+        #         :messages => {
+        #           'input' => {
+        #             'body' => Section(
+        #               :use => 'encoded',
+        #               :encoding_style => 'http://schemas.xmlsoap.org/soap/encoding/',
+        #               :namespace => 'http://soap.amazon.com'
+        #             ),
+        #           },
+        #           'output' => {
+        #             'body' => Section(
+        #               :use => 'encoded',
+        #               :encoding_style => 'http://schemas.xmlsoap.org/soap/encoding/',
+        #               :namespace => 'http://soap.amazon.com'
+        #             )
+        #           }
         #         }
         #       )
         #     }
@@ -192,34 +200,53 @@ module Handsoap
         # }
         return @bindings if @bindings
         ns_wsdl = {'wsdl' => 'http://schemas.xmlsoap.org/wsdl/'}
-        ns_soap = {'soap' => 'http://schemas.xmlsoap.org/wsdl/soap/'}
+        ns_soap1 = {'soap' => 'http://schemas.xmlsoap.org/wsdl/soap/'}
+        ns_soap2 = {'soap' => 'http://schemas.xmlsoap.org/wsdl/soap12/'}
+        ns_soap_http = {'soap' => 'http://schemas.xmlsoap.org/wsdl/http/'}
+        ns_soap = nil
         wsdl = @xsd.wsdl[:document]
         @bindings = {}
         wsdl.xpath('//wsdl:binding', ns_wsdl).each do |xml_wsdl_binding|
+          ns_soap = ns_soap1
+          soap_version = 1
           xml_soap_binding = xml_wsdl_binding.xpath('./soap:binding', ns_soap).first
-          raise "Expected <soap:binding>" if not xml_soap_binding
-          binding = Binding.new(
-                                xml_wsdl_binding['name'],
-                                QName.new(xml_wsdl_binding['type'], wsdl.namespaces),
-                                xml_soap_binding['style'],
-                                xml_soap_binding['transport'])
-          @bindings[binding.name] = binding
-          xml_wsdl_binding.xpath('./wsdl:operation', ns_wsdl).each do |xml_wsdl_operation|
-            xml_soap_operation = xml_wsdl_operation.xpath('./soap:operation', ns_soap).first
-            raise "Expected <soap:operation>" if not xml_soap_operation
-            operation = Operation.new(
-                                      xml_wsdl_operation['name'],
-                                      xml_soap_operation['soapAction'])
-            binding.operations[xml_wsdl_operation['name']] = operation
-            xml_wsdl_operation.xpath('./wsdl:*', ns_wsdl).each do |xml_wsdl_body|
-              xml_soap_body = xml_wsdl_body.xpath('./soap:body', ns_soap).first
-              raise "Expected <soap:body>" if not xml_soap_body
-              operation.bodies[xml_wsdl_body.node_name] = Body.new(
-                                                                   xml_wsdl_body.node_name,
-                                                                   xml_soap_body['use'],
-                                                                   xml_soap_body['encodingStyle'],
-                                                                   xml_soap_body['namespace'])
+          unless xml_soap_binding
+            ns_soap = ns_soap2
+            soap_version = 2
+            xml_soap_binding = xml_wsdl_binding.xpath('./soap:binding', ns_soap).first
+          end
+          # p xml_wsdl_binding if not xml_soap_binding
+          # raise "Expected <soap:binding>" if not xml_soap_binding
+          if xml_soap_binding
+            binding = Binding.new(
+                                  xml_wsdl_binding['name'],
+                                  QName.new(xml_wsdl_binding['type'], wsdl.namespaces),
+                                  soap_version,
+                                  xml_soap_binding['style'],
+                                  xml_soap_binding['transport'])
+            @bindings[binding.name] = binding
+            xml_wsdl_binding.xpath('./wsdl:operation', ns_wsdl).each do |xml_wsdl_operation|
+              xml_soap_operation = xml_wsdl_operation.xpath('./soap:operation', ns_soap).first
+              raise "Expected <soap:operation>" if not xml_soap_operation
+              operation = Operation.new(
+                                        xml_wsdl_operation['name'],
+                                        xml_soap_operation['soapAction'])
+              binding.operations[xml_wsdl_operation['name']] = operation
+              xml_wsdl_operation.xpath('./wsdl:*', ns_wsdl).each do |xml_wsdl_message|
+                sections = {}
+                xml_wsdl_message.xpath('./soap:*', ns_soap).each do |xml_soap_section|
+                  sections[xml_soap_section.node_name] = Section.new(
+                                                                     xml_soap_section.node_name,
+                                                                     xml_soap_section['use'],
+                                                                     xml_soap_section['encodingStyle'],
+                                                                     xml_soap_section['namespace'])
+                end
+                operation.messages[xml_wsdl_message.node_name] = sections
+              end
             end
+          else
+            puts "Skipping unknown binding"
+            # Skipping unknown binding ...
           end
         end
         return @bindings
@@ -303,6 +330,7 @@ module Handsoap
           document = loaded_document[:document]
           namespaces = loaded_document[:namespaces]
           document.xpath('//xs:schema', ns_xs).each do |xml_schema|
+            namespaces.merge!({'xmlns' => xml_schema['targetNamespace'] }) if xml_schema['targetNamespace']
             xml_schema.xpath('./xs:complexType|xs:simpleType', ns_xs).each do |xml_typedef|
               typedef = parse_typedef(xml_typedef, namespaces)
               @types[typedef.name.full_name] = typedef
@@ -477,7 +505,7 @@ module Handsoap
         if xml_structure
           element_structure = parse_element_structure(xml_structure, namespaces)
         end
-        ComplexType.new(name, base, content_style, inheritance_style, element_structure)
+        ComplexType.new(name, base, content_style, inheritance_style, attributes, attribute_groups, element_structure)
       end
 
       def parse_element_structure(xml_structure, namespaces)
@@ -623,6 +651,9 @@ module Handsoap
         @attributes = attributes
         @attribute_groups = attribute_groups
       end
+      def flatten
+        @attributes + @attribute_groups.flatten
+      end
     end
 
     class AttributeGroupReference
@@ -671,12 +702,14 @@ module Handsoap
     end
 
     class ComplexType
-      attr_reader :name, :base, :content_style, :inheritance_style, :element_structure
-      def initialize(name, base, content_style, inheritance_style, element_structure)
+      attr_reader :name, :base, :content_style, :inheritance_style, :attributes, :attribute_groups, :element_structure
+      def initialize(name, base, content_style, inheritance_style, attributes, attribute_groups, element_structure)
         @name = name
         @base = base
         @content_style = content_style
         @inheritance_style = inheritance_style
+        @attributes = attributes
+        @attribute_groups = attribute_groups
         @element_structure = element_structure
       end
       def simple_content?
@@ -752,33 +785,43 @@ module Handsoap
     end
 
     class Binding
-      attr_reader :name, :type, :style, :transport, :operations
+      attr_reader :name, :type, :soap_version, :style, :transport, :operations
       attr_writer :operations
-      def initialize(name, type, style, transport)
+      def initialize(name, type, soap_version, style, transport)
         @name = name
         @type = type
+        @soap_version = soap_version
         @style = style
         @transport = transport
         @operations = {}
       end
-    end
-
-    class Operation
-      attr_reader :name, :soap_action, :bodies
-      def initialize(name, soap_action)
-        @name = name
-        @soap_action = soap_action
-        @bodies = {}
+      def rpc_style?
+        style == 'rpc'
+      end
+      def document_style?
+        style == 'document'
       end
     end
 
-    class Body
+    class Operation
+      attr_reader :name, :soap_action, :messages
+      def initialize(name, soap_action)
+        @name = name
+        @soap_action = soap_action
+        @messages = {}
+      end
+    end
+
+    class Section
       attr_reader :name, :use, :encoding_style, :namespace
       def initialize(name, use, encoding_style, namespace)
         @name = name
         @use = use
         @encoding_style = encoding_style
         @namespace = namespace
+      end
+      def encoded?
+        use == "encoded" || encoding_style == "http://schemas.xmlsoap.org/soap/encoding/"
       end
     end
 

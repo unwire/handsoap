@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 require 'rubygems'
-require '../lib/handsoap/parser.rb'
+require 'test/unit'
+$LOAD_PATH << "#{File.dirname(__FILE__)}/../lib/"
+require 'handsoap/parser.rb'
 
 def var_dump(val)
   puts val.to_yaml.gsub(/ !ruby\/object:.+$/, '')
 end
-
-require 'test/unit'
 
 # Amazon is rpc + literal and is self-contained
 # http://soap.amazon.com/schemas2/AmazonWebServices.wsdl

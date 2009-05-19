@@ -37,5 +37,4 @@ module Rails::Generator::Scripts
   end
 end
 
-ARGV.shift if ['--help', '-h'].include?(ARGV[0])
-Rails::Generator::Scripts::Generate.new.run(ARGV)
+

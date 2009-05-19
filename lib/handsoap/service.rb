@@ -87,6 +87,9 @@ module Handsoap
       end
       SOAP_NAMESPACE[@protocol_version]
     end
+    def self.request_content_type
+      @protocol_version == 1 ? "text/xml" : "application/soap+xml"
+    end
     def self.map_method(mapping)
       if @mapping.nil?
         @mapping = {}
@@ -134,7 +137,8 @@ module Handsoap
         if block_given?
           yield doc.find(action)
         end
-        dispatch doc
+        # TODO: the action parameter should actually be the soapAction attribute, but they are likely to be the same
+        dispatch doc, action
       end
     end
     def on_before_dispatch
@@ -153,10 +157,11 @@ module Handsoap
         end
       end
     end
-    def dispatch(doc)
+    def dispatch(doc, action)
       on_before_dispatch()
       headers = {
-        "Content-Type" => "text/xml;charset=UTF-8"
+        "Content-Type" => "#{self.class.request_content_type};charset=UTF-8",
+        "SOAPAction" => action.gsub(/^.+:/, "")
       }
       body = doc.to_s
       debug do |logger|
