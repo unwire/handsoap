@@ -129,7 +129,7 @@ module Handsoap
         super
       end
     end
-    def invoke(action, &block)
+    def invoke(action, soap_action = nil, &block)
       if action
         doc = make_envelope do |body|
           body.add action
@@ -137,8 +137,7 @@ module Handsoap
         if block_given?
           yield doc.find(action)
         end
-        # TODO: the action parameter should actually be the soapAction attribute, but they are likely to be the same
-        dispatch doc, action
+        dispatch(doc, soap_action || action.gsub(/^.+:/, ""))
       end
     end
     def on_before_dispatch
@@ -161,7 +160,7 @@ module Handsoap
       on_before_dispatch()
       headers = {
         "Content-Type" => "#{self.class.request_content_type};charset=UTF-8",
-        "SOAPAction" => action.gsub(/^.+:/, "")
+        "SOAPAction" => action
       }
       body = doc.to_s
       debug do |logger|
