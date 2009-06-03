@@ -48,10 +48,11 @@ module Handsoap
   end
 
   class Fault < Exception
-    attr_reader :code, :reason
-    def initialize(code, reason)
+    attr_reader :code, :reason, :details
+    def initialize(code, reason, details)
       @code = code
       @reason = reason
+      @details = details
     end
     def to_s
       "Handsoap::Fault { :code => '#{@code}', :reason => '#{@reason}' }"
@@ -69,7 +70,8 @@ module Handsoap
       if reason == ""
         reason = node.xpath('./faultstring/text()', ns).to_s
       end
-      self.new(fault_code, reason)
+      details = node.xpath('./detail/*', ns)
+      self.new(fault_code, reason, details)
     end
   end
 
