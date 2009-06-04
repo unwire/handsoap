@@ -130,17 +130,25 @@ module Handsoap
         super
       end
     end
-    def invoke(action, soap_action = nil, &block)
-      if action
-        doc = make_envelope do |body|
-          body.add action
-        end
-        if block_given?
-          yield doc.find(action)
-        end
-        dispatch(doc, soap_action || action.gsub(/^.+:/, ""))
-      end
-    end
+		def invoke(action, options = { :soap_action => :auto }, &block)
+			if action
+				if options.kind_of? String
+					options = { :soap_action => options }
+				end
+				if options[:soap_action] == :auto
+					options[:soap_action] = action.gsub(/^.+:/, "")
+				elsif options[:soap_action] == :none
+					options[:soap_action] = nil
+				end
+				doc = make_envelope do |body|
+					body.add action
+				end
+				if block_given?
+					yield doc.find(action)
+				end
+				dispatch(doc, options[:soap_action])
+			end
+		end
     def on_before_dispatch
     end
     def on_fault(fault)
@@ -205,9 +213,9 @@ module Handsoap
     def dispatch(doc, action)
       on_before_dispatch()
       headers = {
-        "Content-Type" => "#{self.class.request_content_type};charset=UTF-8",
-        "SOAPAction" => action
+        "Content-Type" => "#{self.class.request_content_type};charset=UTF-8"
       }
+			headers["SOAPAction"] = action unless action.nil?
       body = doc.to_s
       debug do |logger|
         logger.puts "==============="
