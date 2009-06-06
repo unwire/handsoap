@@ -75,3 +75,6 @@ end
 
 puts "-------------"
 p x.document.find('ninjitsu').to_s
+
+puts "-------------"
+p x.document.find(:ninjitsu).to_s
