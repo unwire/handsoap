@@ -58,3 +58,20 @@ doc = Handsoap::XmlMason::Document.new do |doc|
 end
 
 puts doc
+
+x = nil
+doc = Handsoap::XmlMason::Document.new do |doc|
+  doc.add 'body' do |b|
+    b.add 'yonks', "lorem\nipsum\ndolor\nsit amet"
+    b.add 'ninja' do |n|
+      x = n
+      n.set_value "ninja"
+    end
+    b.add 'ninjitsu' do |n|
+      n.set_value "ninjitsu"
+    end
+  end
+end
+
+puts "-------------"
+p x.document.find('ninjitsu').to_s

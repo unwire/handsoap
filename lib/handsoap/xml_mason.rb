@@ -96,6 +96,9 @@ module Handsoap
           yield self
         end
       end
+      def document
+        @parent.respond_to?(:document) ? @parent.document : @parent
+      end
       def full_name
         @prefix.nil? ? @node_name : (@prefix + ":" + @node_name)
       end
