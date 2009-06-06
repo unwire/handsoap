@@ -5,6 +5,17 @@ require 'nokogiri'
 require 'curb'
 require 'handsoap/xml_mason'
 require 'time'
+require 'htmlentities'
+
+# Nokogiri doesn't have a way of getting plain strings out,
+# so this monkeypatch adds that capability ..
+module Utf8StringPatch
+  def to_utf8
+    HTMLEntities.decode_entities(self.serialize('UTF-8'))
+  end
+end
+Nokogiri::XML::Text.send :include, Utf8StringPatch
+Nokogiri::XML::Nodeset.send :include, Utf8StringPatch
 
 module Handsoap
 
@@ -161,7 +172,7 @@ module Handsoap
     def xml_to_str(node, xquery = nil)
       begin
         n = xquery ? node.xpath(xquery, ns).first : node
-        n.serialize('UTF-8')
+        n.to_utf8
       rescue Exception => ex
         nil
       end
