@@ -3,15 +3,15 @@ require 'rubygems'
 require 'httpclient'
 require 'nokogiri'
 require 'curb'
-require 'handsoap/xml_mason'
 require 'time'
-require 'htmlentities'
+require 'handsoap/xml_mason'
 
 # Nokogiri doesn't have a way of getting plain strings out,
 # so this monkeypatch adds that capability ..
 module Utf8StringPatch
   def to_utf8
-    HTMLEntities.decode_entities(self.serialize('UTF-8'))
+    # HTMLEntities.decode_entities(self.serialize('UTF-8'))
+    self.serialize('UTF-8').gsub('&lt;', '<').gsub('&gt;', '>').gsub('&quot;', '"').gsub('&apos;', "'").gsub('&amp;', '&')
   end
 end
 Nokogiri::XML::Text.send :include, Utf8StringPatch
