@@ -67,7 +67,7 @@ module Handsoap
     end
 
     def self.service_basename(wsdl)
-      wsdl.service.gsub(/service$/, "")
+      underscore(wsdl.service).gsub(/_service$/, "")
     end
 
     def self.service_name(wsdl)
