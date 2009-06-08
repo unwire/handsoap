@@ -85,7 +85,8 @@ module Handsoap
       private :ns
 
       def protocol_from_ns(node)
-        case @doc.namespaces["xmlns:#{node.namespace}"]
+        href = node.namespace.respond_to?(:href) ? node.namespace.href : @doc.namespaces["xmlns:#{node.namespace.href}"]
+        case href
         when "http://schemas.xmlsoap.org/wsdl/soap/"
           :soap11
         when "http://schemas.xmlsoap.org/wsdl/soap12/"
@@ -93,19 +94,20 @@ module Handsoap
         when "http://schemas.xmlsoap.org/wsdl/http/"
           :http
         else
-          raise "Unknown namespace '#{node.namespace}'"
+          raise "Unknown namespace '#{href}'"
         end
       end
       private :protocol_from_ns
 
       def is_wsdl2?(node)
-        case @doc.namespaces["xmlns:#{node.namespace}"]
+        href = node.namespace.respond_to?(:href) ? node.namespace.href : @doc.namespaces["xmlns:#{node.namespace.href}"]
+        case href
         when "http://schemas.xmlsoap.org/wsdl/"
           false
         when "http://www.w3.org/ns/wsdl/"
           true
         else
-          raise "Unknown namespace '#{node.namespace}'"
+          raise "Unknown namespace '#{href}'"
         end
       end
       private :is_wsdl2?
