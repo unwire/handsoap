@@ -11,7 +11,11 @@ require 'handsoap/xml_mason'
 module Utf8StringPatch
   def to_utf8
     # HTMLEntities.decode_entities(self.serialize(:encoding => 'UTF-8'))
-    self.serialize(:encoding => 'UTF-8').gsub('&lt;', '<').gsub('&gt;', '>').gsub('&quot;', '"').gsub('&apos;', "'").gsub('&amp;', '&')
+    if Gem.loaded_specs['nokogiri'].version >= Gem::Version.new('1.3.0')
+      self.serialize(:encoding => 'UTF-8').gsub('&lt;', '<').gsub('&gt;', '>').gsub('&quot;', '"').gsub('&apos;', "'").gsub('&amp;', '&')
+    else
+      self.serialize('UTF-8').gsub('&lt;', '<').gsub('&gt;', '>').gsub('&quot;', '"').gsub('&apos;', "'").gsub('&amp;', '&')
+    end
   end
 end
 
@@ -179,48 +183,33 @@ module Handsoap
     private
     # Helper to serialize a node into a ruby string
     def xml_to_str(node, xquery = nil)
-      begin
-        n = xquery ? node.xpath(xquery, ns).first : node
-        n.to_utf8
-      rescue Exception => ex
-        nil
-      end
+      n = xquery ? node.xpath(xquery, ns).first : node
+      return if n.nil?
+      n.to_utf8
     end
     # Helper to serialize a node into a ruby integer
     def xml_to_int(node, xquery = nil)
-      begin
-        n = xquery ? node.xpath(xquery, ns).first : node
-        n.to_s.to_i
-      rescue Exception => ex
-        nil
-      end
+      n = xquery ? node.xpath(xquery, ns).first : node
+      return if n.nil?
+      n.to_s.to_i
     end
     # Helper to serialize a node into a ruby float
     def xml_to_float(node, xquery = nil)
-      begin
-        n = xquery ? node.xpath(xquery, ns).first : node
-        n.to_s.to_f
-      rescue Exception => ex
-        nil
-      end
+      n = xquery ? node.xpath(xquery, ns).first : node
+      return if n.nil?
+      n.to_s.to_f
     end
     # Helper to serialize a node into a ruby boolean
     def xml_to_bool(node, xquery = nil)
-      begin
-        n = xquery ? node.xpath(xquery, ns).first : node
-        n.to_s == "true"
-      rescue Exception => ex
-        nil
-      end
+      n = xquery ? node.xpath(xquery, ns).first : node
+      return if n.nil?
+      n.to_s == "true"
     end
     # Helper to serialize a node into a ruby Time object
     def xml_to_date(node, xquery = nil)
-      begin
-        n = xquery ? node.xpath(xquery, ns).first : node
-        Time.iso8601(n.to_s)
-      rescue Exception => ex
-        nil
-      end
+      n = xquery ? node.xpath(xquery, ns).first : node
+      return if n.nil?
+      Time.iso8601(n.to_s)
     end
     def debug(message = nil)
       if @@logger
