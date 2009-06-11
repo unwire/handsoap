@@ -39,8 +39,15 @@ class HandsoapGenerator < Rails::Generator::Base
       end
       # TODO
       # Ask user about which endpoints to use ?
-      # puts "Detected endpoints:"
-      # puts Handsoap::Compiler.compile_endpoints(wsdl, protocol)
+      m.message do |out|
+        out.puts "----"
+        out.puts "Endpoints in WSDL"
+        out.puts "  You should copy these to the appropriate environment files."
+        out.puts "  (Eg. `config/environments/*.rb`)"
+        out.puts "----"
+        out.puts Handsoap::Compiler.compile_endpoints(wsdl, protocol)
+        out.puts "----"
+      end
     end
   end
 
@@ -66,6 +73,10 @@ module Handsoap #:nodoc:
           ensure
             temp_file.unlink
           end
+        end
+
+        def message(&block)
+          yield $stdout
         end
 
         private
