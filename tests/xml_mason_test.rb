@@ -93,3 +93,14 @@ doc = Handsoap::XmlMason::Document.new do |doc|
 end
 
 puts doc
+
+puts "-------------"
+
+doc = Handsoap::XmlMason::Document.new do |doc|
+  doc.add 'body' do |b|
+    b.add 'raw', '<b>bold</b>', :raw
+    b.add 'well-done', '<b>bold</b>'
+  end
+end
+
+puts doc
