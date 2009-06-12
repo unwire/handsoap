@@ -76,7 +76,7 @@ module Handsoap #:nodoc:
         end
 
         def message(&block)
-          yield $stdout
+          yield $stdout unless logger.quiet
         end
 
         private

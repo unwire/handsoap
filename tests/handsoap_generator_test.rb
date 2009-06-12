@@ -20,8 +20,7 @@ end
 class HandsoapGeneratorTest < Test::Unit::TestCase
 
   def setup
-    FileUtils.rm_r(fake_rails_root)
-    FileUtils.mkdir_p(fake_rails_root)
+    FileUtils.mkdir_p(fake_rails_root) if File.directory?(fake_rails_root)
     @original_files = file_list
   end
 
@@ -36,9 +35,9 @@ class HandsoapGeneratorTest < Test::Unit::TestCase
   def test_generator_creates_files
     invoke_generator!
     assert file_list.find {|name| name.match("app/models/version_service.rb") }
-    assert file_list.find {|name| name.match("tests/integration/version_service_test.rb") }
+    assert file_list.find {|name| name.match("test/integration/version_service_test.rb") }
     assert File.read(fake_rails_root + "/app/models/version_service.rb").any?
-    assert File.read(fake_rails_root + "/tests/integration/version_service_test.rb").any?
+    assert File.read(fake_rails_root + "/test/integration/version_service_test.rb").any?
   end
 
   def test_running_generator_twice_silently_skips_files
