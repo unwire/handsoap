@@ -78,3 +78,18 @@ p x.document.find('ninjitsu').to_s
 
 puts "-------------"
 p x.document.find(:ninjitsu).to_s
+
+puts "-------------"
+
+doc = Handsoap::XmlMason::Document.new do |doc|
+  doc.add 'body' do |b|
+    b.add 'raw' do |y|
+      y.set_value '<b>bold</b>', :raw
+    end
+    b.add 'well-done' do |y|
+      y.set_value '<b>bold</b>'
+    end
+  end
+end
+
+puts doc

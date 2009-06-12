@@ -78,6 +78,12 @@ module Handsoap
       end
     end
 
+    class RawContent < TextNode
+      def to_s(indentation = '')
+        @text
+      end
+    end
+
     class Element < Node
       def initialize(parent, prefix, node_name, value = nil)
         super()
@@ -109,11 +115,15 @@ module Handsoap
         @children << node
         return node
       end
-      def set_value(value)
+      def set_value(value, *flags)
         if @children.length > 0
           raise "Element already has children. Can't set value"
         end
-        @children = [TextNode.new(value)]
+        if flags && flags.include?(:raw)
+          @children = [RawContent.new(value)]
+        else
+          @children = [TextNode.new(value)]
+        end
       end
       def set_attr(name, value)
         full_name = parse_ns(name).join(":")
