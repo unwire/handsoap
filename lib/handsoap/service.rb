@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 require 'rubygems'
-require 'httpclient'
 require 'nokogiri'
-require 'curb'
 require 'time'
 require 'handsoap/xml_mason'
 
@@ -33,11 +31,14 @@ end
 module Handsoap
 
   def self.http_driver
-    @http_driver || :curb
+    @http_driver || (self.http_driver = :curb)
   end
 
   def self.http_driver=(driver)
     @http_driver = driver
+    require 'httpclient' if driver == :httpclient
+    require 'curb' if driver == :curb
+    return driver
   end
 
   SOAP_NAMESPACE = { 1 => 'http://schemas.xmlsoap.org/soap/envelope/', 2 => 'http://www.w3.org/2001/12/soap-encoding' }
@@ -248,7 +249,7 @@ module Handsoap
           logger.puts Handsoap.pretty_format_envelope(http_client.body_str)
         end
         soap_response = Response.new(http_client.body_str, self.class.envelope_namespace)
-      else
+      elsif Handsoap.http_driver == :httpclient
         response = HTTPClient.new.post(self.class.uri, body, headers)
         debug do |logger|
           logger.puts "--- Response ---"
@@ -258,6 +259,8 @@ module Handsoap
           logger.puts Handsoap.pretty_format_envelope(response.content)
         end
         soap_response = Response.new(response.content, self.class.envelope_namespace)
+      else
+        raise "Unknown http driver #{Handsoap.http_driver}"
       end
       if soap_response.fault?
         return self.on_fault(soap_response.fault)
