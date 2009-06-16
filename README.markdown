@@ -5,7 +5,7 @@ Install
 ---
 
     gem sources -a http://gems.github.com
-    sudo gem install troelskn-handsoap
+    sudo gem install troelskn-handsoap curb
 
 What
 ---
