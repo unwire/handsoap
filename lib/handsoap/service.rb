@@ -25,6 +25,9 @@ module Nokogiri
     class Nodeset
       include Utf8StringPatch
     end
+    class Attr
+      include Utf8StringPatch
+    end
   end
 end
 
@@ -188,18 +191,21 @@ module Handsoap
       return if n.nil?
       n.to_utf8
     end
+    alias_method :xml_to_s, :xml_to_str
     # Helper to serialize a node into a ruby integer
     def xml_to_int(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
       n.to_s.to_i
     end
+    alias_method :xml_to_i, :xml_to_int
     # Helper to serialize a node into a ruby float
     def xml_to_float(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
       n.to_s.to_f
     end
+    alias_method :xml_to_f, :xml_to_float
     # Helper to serialize a node into a ruby boolean
     def xml_to_bool(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
