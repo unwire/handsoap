@@ -2,95 +2,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{handsoap}
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-<<<<<<< HEAD:handsoap.gemspec
-  s.version = "0.1.2"
-=======
-  s.version = "0.1.0"
->>>>>>> Regenerated gemspec for version 0.1.0:handsoap.gemspec
-
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Troels Knak-Nielsen"]
-  s.date = %q{2009-04-29}
-=======
-  s.version = "0.1.1"
-
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Troels Knak-Nielsen"]
-  s.date = %q{2009-04-28}
->>>>>>> Regenerated gemspec for version 0.1.1:handsoap.gemspec
-=======
-  s.version = "0.1.2"
-
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Troels Knak-Nielsen"]
-  s.date = %q{2009-04-29}
->>>>>>> Regenerated gemspec for version 0.1.2:handsoap.gemspec
-=======
-  s.version = "0.2.0"
-
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Troels Knak-Nielsen"]
-  s.date = %q{2009-06-07}
->>>>>>> Regenerated gemspec for version 0.2.0:handsoap.gemspec
-=======
-  s.version = "0.2.1"
-=======
-  s.version = "0.2.2"
->>>>>>> Regenerated gemspec for version 0.2.2:handsoap.gemspec
-=======
-  s.version = "0.2.3"
->>>>>>> Regenerated gemspec for version 0.2.3:handsoap.gemspec
-=======
-  s.version = "0.2.4"
->>>>>>> Regenerated gemspec for version 0.2.4:handsoap.gemspec
-=======
-  s.version = "0.2.5"
->>>>>>> Regenerated gemspec for version 0.2.5:handsoap.gemspec
-
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Troels Knak-Nielsen"]
-  s.date = %q{2009-06-08}
->>>>>>> Regenerated gemspec for version 0.2.1:handsoap.gemspec
-=======
-  s.version = "0.2.6"
-
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Troels Knak-Nielsen"]
-  s.date = %q{2009-06-10}
->>>>>>> Regenerated gemspec for version 0.2.6:handsoap.gemspec
-=======
-  s.version = "0.2.7"
-
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Troels Knak-Nielsen"]
-  s.date = %q{2009-06-12}
->>>>>>> Regenerated gemspec for version 0.2.7:handsoap.gemspec
-=======
-  s.version = "0.2.8"
-
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Troels Knak-Nielsen"]
-  s.date = %q{2009-06-16}
->>>>>>> Regenerated gemspec for version 0.2.8:handsoap.gemspec
-=======
   s.version = "0.2.9"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Troels Knak-Nielsen"]
   s.date = %q{2009-06-17}
->>>>>>> Regenerated gemspec for version 0.2.9:handsoap.gemspec
   s.description = %q{Handsoap is a library for creating SOAP clients in Ruby}
   s.email = %q{troelskn@gmail.com}
   s.extra_rdoc_files = [

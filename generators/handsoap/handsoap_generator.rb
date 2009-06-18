@@ -1,36 +1,3 @@
-<<<<<<< HEAD:generators/handsoap/handsoap_generator.rb
-require 'open-uri'
-require 'uri'
-require 'cgi'
-require 'nokogiri'
-
-# TODO: inline builders, if they are only ever used in one place
-<<<<<<< HEAD:generators/handsoap/handsoap_generator.rb
-# TODO: http://www.crossedconnections.org/w/?p=51 -- The 'typens' namespace is magical ...
-=======
->>>>>>> Added generator .. Still very incomplete:generators/handsoap/handsoap_generator.rb
-
-class Builders
-  def initialize(xsd)
-    @xsd = xsd
-    @builders = {}
-  end
-  def add(type)
-    @builders[type] = false unless @builders[type]
-  end
-  def each
-    results = []
-    while builder = @builders.find { |builder,is_rendered| !is_rendered }
-      results << yield(@xsd.get_complex_type(builder[0]))
-      @builders[builder[0]] = true
-    end
-    results.join("")
-  end
-end
-
-class HandsoapGenerator < Rails::Generator::NamedBase
-  attr_reader :wsdl
-=======
 # -*- coding: utf-8 -*-
 require "#{File.dirname(__FILE__)}/../../lib/handsoap/parser.rb"
 require "#{File.dirname(__FILE__)}/../../lib/handsoap/compiler.rb"
@@ -41,7 +8,6 @@ require "#{File.dirname(__FILE__)}/../../lib/handsoap/compiler.rb"
 #   soap_version (1/2/auto)
 #   basename
 class HandsoapGenerator < Rails::Generator::Base
->>>>>>> Rewrote generator code + created a proper test-case for it:generators/handsoap/handsoap_generator.rb
   def initialize(runtime_args, runtime_options = {})
     super
     # Wsdl argument is required.
