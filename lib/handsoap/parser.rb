@@ -85,7 +85,7 @@ module Handsoap
       private :ns
 
       def protocol_from_ns(node)
-        href = node.namespace.respond_to?(:href) ? node.namespace.href : @doc.namespaces["xmlns:#{node.namespace.href}"]
+        href = node.namespace.respond_to?(:href) ? node.namespace.href : @doc.namespaces["xmlns:#{node.namespace}"]
         case href
         when "http://schemas.xmlsoap.org/wsdl/soap/"
           :soap11
@@ -100,7 +100,7 @@ module Handsoap
       private :protocol_from_ns
 
       def is_wsdl2?(node)
-        href = node.namespace.respond_to?(:href) ? node.namespace.href : @doc.namespaces["xmlns:#{node.namespace.href}"]
+        href = node.namespace.respond_to?(:href) ? node.namespace.href : @doc.namespaces["xmlns:#{node.namespace}"]
         case href
         when "http://schemas.xmlsoap.org/wsdl/"
           false
