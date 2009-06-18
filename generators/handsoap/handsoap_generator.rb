@@ -4,7 +4,10 @@ require 'cgi'
 require 'nokogiri'
 
 # TODO: inline builders, if they are only ever used in one place
+<<<<<<< HEAD:generators/handsoap/handsoap_generator.rb
 # TODO: http://www.crossedconnections.org/w/?p=51 -- The 'typens' namespace is magical ...
+=======
+>>>>>>> Added generator .. Still very incomplete:generators/handsoap/handsoap_generator.rb
 
 class Builders
   def initialize(xsd)
