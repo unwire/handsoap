@@ -11,6 +11,7 @@ Gem::Specification.new do |s|
 <<<<<<< HEAD:handsoap.gemspec
 <<<<<<< HEAD:handsoap.gemspec
 <<<<<<< HEAD:handsoap.gemspec
+<<<<<<< HEAD:handsoap.gemspec
   s.version = "0.1.2"
 =======
   s.version = "0.1.0"
@@ -59,6 +60,13 @@ Gem::Specification.new do |s|
   s.authors = ["Troels Knak-Nielsen"]
   s.date = %q{2009-06-08}
 >>>>>>> Regenerated gemspec for version 0.2.1:handsoap.gemspec
+=======
+  s.version = "0.2.6"
+
+  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
+  s.authors = ["Troels Knak-Nielsen"]
+  s.date = %q{2009-06-10}
+>>>>>>> Regenerated gemspec for version 0.2.6:handsoap.gemspec
   s.description = %q{Handsoap is a library for creating SOAP clients in Ruby}
   s.email = %q{troelskn@gmail.com}
   s.extra_rdoc_files = [
@@ -90,15 +98,12 @@ Gem::Specification.new do |s|
     if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<nokogiri>, [">= 1.2.3"])
       s.add_runtime_dependency(%q<curb>, [">= 0.3.2"])
-      s.add_runtime_dependency(%q<htmlentities>, [">= 4.0.0"])
     else
       s.add_dependency(%q<nokogiri>, [">= 1.2.3"])
       s.add_dependency(%q<curb>, [">= 0.3.2"])
-      s.add_dependency(%q<htmlentities>, [">= 4.0.0"])
     end
   else
     s.add_dependency(%q<nokogiri>, [">= 1.2.3"])
     s.add_dependency(%q<curb>, [">= 0.3.2"])
-    s.add_dependency(%q<htmlentities>, [">= 4.0.0"])
   end
 end
