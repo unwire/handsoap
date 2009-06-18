@@ -120,6 +120,7 @@ module Handsoap
         @attributes[name] = value
       end
       def find(name)
+        name = name.to_s if name.kind_of? Symbol
         if @node_name == name || full_name == name
           return self
         end
@@ -134,6 +135,7 @@ module Handsoap
         return nil
       end
       def find_all(name)
+        name = name.to_s if name.kind_of? Symbol
         result = []
         if @node_name == name || full_name == name
           result << self
