@@ -9,7 +9,8 @@ begin
     gemspec.description = gemspec.summary
     gemspec.authors = ["Troels Knak-Nielsen"]
     gemspec.add_dependency "nokogiri", ">= 1.2.3"
-    gemspec.add_dependency "curb", ">= 0.3.2"
+		# We can't depend on these in the gem, since they are pluggable at runtime. You need one or the other though.
+#    gemspec.add_dependency "curb", ">= 0.3.2"
 #    gemspec.add_dependency "httpclient", ">= 2.1.2"
     gemspec.files = FileList['lib/**/*.rb', 'generators/handsoap/templates', 'generators/**/*', '[A-Z]*.*'].to_a
 
