@@ -3,6 +3,7 @@
 Gem::Specification.new do |s|
   s.name = %q{handsoap}
 <<<<<<< HEAD:handsoap.gemspec
+<<<<<<< HEAD:handsoap.gemspec
   s.version = "0.1.2"
 =======
   s.version = "0.1.0"
@@ -11,6 +12,13 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Troels Knak-Nielsen"]
   s.date = %q{2009-04-29}
+=======
+  s.version = "0.1.1"
+
+  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
+  s.authors = ["Troels Knak-Nielsen"]
+  s.date = %q{2009-04-28}
+>>>>>>> Regenerated gemspec for version 0.1.1:handsoap.gemspec
   s.description = %q{Handsoap is a library for creating SOAP clients in Ruby}
   s.email = %q{troelskn@gmail.com}
   s.extra_rdoc_files = [
