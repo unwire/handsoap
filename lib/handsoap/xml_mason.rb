@@ -14,9 +14,9 @@ module Handsoap
       def initialize
         @namespaces = {}
       end
-      def add(node_name, value = nil)
+      def add(node_name, value = nil, *flags)
         prefix, name = parse_ns(node_name)
-        node = append_child Element.new(self, prefix, name, value)
+        node = append_child Element.new(self, prefix, name, value, flags)
         if block_given?
           yield node
         end
@@ -85,7 +85,7 @@ module Handsoap
     end
 
     class Element < Node
-      def initialize(parent, prefix, node_name, value = nil)
+      def initialize(parent, prefix, node_name, value = nil, flags = [])
         super()
 #         if prefix.to_s == ""
 #           raise "missing prefix"
@@ -96,7 +96,7 @@ module Handsoap
         @children = []
         @attributes = {}
         if not value.nil?
-          set_value value.to_s
+          set_value value.to_s, *flags
         end
         if block_given?
           yield self
