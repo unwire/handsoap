@@ -4,6 +4,7 @@ require 'httpclient'
 require 'nokogiri'
 require 'curb'
 require 'handsoap/xml_mason'
+require 'time'
 
 module Handsoap
 
@@ -146,6 +147,51 @@ module Handsoap
       raise fault
     end
     private
+    # Helper to serialize a node into a ruby string
+    def xml_to_str(node, xquery = nil)
+      begin
+        n = xquery ? node.xpath(xquery, ns).first : node
+        n.serialize('UTF-8')
+      rescue Exception => ex
+        nil
+      end
+    end
+    # Helper to serialize a node into a ruby integer
+    def xml_to_int(node, xquery = nil)
+      begin
+        n = xquery ? node.xpath(xquery, ns).first : node
+        n.to_s.to_i
+      rescue Exception => ex
+        nil
+      end
+    end
+    # Helper to serialize a node into a ruby float
+    def xml_to_float(node, xquery = nil)
+      begin
+        n = xquery ? node.xpath(xquery, ns).first : node
+        n.to_s.to_f
+      rescue Exception => ex
+        nil
+      end
+    end
+    # Helper to serialize a node into a ruby boolean
+    def xml_to_bool(node, xquery = nil)
+      begin
+        n = xquery ? node.xpath(xquery, ns).first : node
+        n.to_s == "true"
+      rescue Exception => ex
+        nil
+      end
+    end
+    # Helper to serialize a node into a ruby Time object
+    def xml_to_date(node, xquery = nil)
+      begin
+        n = xquery ? node.xpath(xquery, ns).first : node
+        Time.iso8601(n.to_s)
+      rescue Exception => ex
+        nil
+      end
+    end
     def debug(message = nil)
       if @@logger
         if message
