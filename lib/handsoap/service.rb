@@ -10,8 +10,8 @@ require 'handsoap/xml_mason'
 # so this monkeypatch adds that capability ..
 module Utf8StringPatch
   def to_utf8
-    # HTMLEntities.decode_entities(self.serialize('UTF-8'))
-    self.serialize('UTF-8').gsub('&lt;', '<').gsub('&gt;', '>').gsub('&quot;', '"').gsub('&apos;', "'").gsub('&amp;', '&')
+    # HTMLEntities.decode_entities(self.serialize(:encoding => 'UTF-8'))
+    self.serialize(:encoding => 'UTF-8').gsub('&lt;', '<').gsub('&gt;', '>').gsub('&quot;', '"').gsub('&apos;', "'").gsub('&amp;', '&')
   end
 end
 
