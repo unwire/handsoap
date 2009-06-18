@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 module Handsoap
-  module Compiler
     class CodeWriter
 
       def initialize
@@ -36,13 +35,25 @@ module Handsoap
       end
     end
 
-    def self.write
+  class Compiler
+
+    def initialize(wsdl, basename = nil)
+      @wsdl = wsdl
+      if basename
+        @basename = basename.gsub(/[^a-zA-Z0-9]/, "_").gsub(/_+/, "_").gsub(/(^_+|_+$)/, '')
+      else
+        @basename = @wsdl.service
+      end
+      @basename = underscore(@basename).gsub(/_service$/, "")
+    end
+
+    def write
       writer = CodeWriter.new
       yield writer
       writer.to_s
     end
 
-    def self.underscore(camel_cased_word)
+    def underscore(camel_cased_word)
       camel_cased_word.to_s.gsub(/::/, '/').
         gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
         gsub(/([a-z\d])([A-Z])/,'\1_\2').
@@ -50,7 +61,7 @@ module Handsoap
         downcase
     end
 
-    def self.camelize(lower_case_and_underscored_word)
+    def camelize(lower_case_and_underscored_word)
       lower_case_and_underscored_word.to_s.gsub(/\/(.?)/) {
         "::" + $1.upcase
       }.gsub(/(^|_)(.)/) {
@@ -58,7 +69,7 @@ module Handsoap
       }
     end
 
-    def self.method_name(operation)
+    def method_name(operation)
       if operation.name.match /^(get|find|select|fetch)/i
         "#{underscore(operation.name)}"
       else
@@ -66,19 +77,19 @@ module Handsoap
       end
     end
 
-    def self.service_basename(wsdl)
-      underscore(wsdl.service).gsub(/_service$/, "")
+    def service_basename
+      @basename
     end
 
-    def self.service_name(wsdl)
-      camelize(service_basename(wsdl)) + "Service"
+    def service_name
+      camelize(service_basename) + "Service"
     end
 
-    def self.endpoint_name(wsdl)
-      "#{service_basename(wsdl).upcase}_SERVICE_ENDPOINT"
+    def endpoint_name
+      "#{service_basename.upcase}_SERVICE_ENDPOINT"
     end
 
-    def self.detect_protocol(wsdl)
+    def detect_protocol
       if endpoints.select { |endpoint| endpoint.protocol == :soap12 }.any?
         :soap12
       elsif endpoints.select { |endpoint| endpoint.protocol == :soap11 }.any?
@@ -88,12 +99,12 @@ module Handsoap
       end
     end
 
-    def self.compile_endpoints(wsdl, protocol)
+    def compile_endpoints(protocol)
       version = protocol == :soap12 ? 2 : 1
-      wsdl.endpoints.select { |endpoint| endpoint.protocol == protocol }.map do |endpoint|
+      @wsdl.endpoints.select { |endpoint| endpoint.protocol == protocol }.map do |endpoint|
         write do |w|
-          w.puts "# wsdl: #{wsdl.url}"
-          w.begin "#{endpoint_name(wsdl)} = {"
+          w.puts "# wsdl: #{@wsdl.url}"
+          w.begin "#{endpoint_name} = {"
           w.puts ":uri => '#{endpoint.url}',"
           w.puts ":version => #{version}"
           w.end "}"
@@ -101,21 +112,21 @@ module Handsoap
       end
     end
 
-    def self.compile_service(wsdl, protocol, *options)
-      binding = wsdl.bindings.find { |b| b.protocol == protocol }
+    def compile_service(protocol, *options)
+      binding = @wsdl.bindings.find { |b| b.protocol == protocol }
       raise "Can't find binding for requested protocol (#{protocol})" unless binding
       write do |w|
         w.puts "# -*- coding: utf-8 -*-"
         w.puts "require 'handsoap'"
         w.puts
-        w.begin "class #{service_name(wsdl)} < Handsoap::Service"
-        w.puts "endpoint #{endpoint_name(wsdl)}"
+        w.begin "class #{service_name} < Handsoap::Service"
+        w.puts "endpoint #{endpoint_name}"
         w.begin "on_create_document do |doc|"
-        w.puts "doc.alias 'tns', '#{wsdl.target_ns}'"
+        w.puts "doc.alias 'tns', '#{@wsdl.target_ns}'"
         w.end
         w.puts
         w.puts "# public methods"
-        wsdl.interface.operations.each do |operation|
+        @wsdl.interface.operations.each do |operation|
           action = binding.actions.find { |a| a.name == operation.name }
           raise "Can't find action for operation #{operation.name}" unless action
           w.puts
@@ -140,20 +151,20 @@ module Handsoap
       end
     end
 
-    def self.compile_test(wsdl, protocol)
-      binding = wsdl.bindings.find { |b| b.protocol == protocol }
+    def compile_test(protocol)
+      binding = @wsdl.bindings.find { |b| b.protocol == protocol }
       raise "Can't find binding for requested protocol (#{protocol})" unless binding
       write do |w|
         w.puts "# -*- coding: utf-8 -*-"
         w.puts "require 'test_helper'"
         w.puts
-        w.puts "# #{service_name(wsdl)}.logger = $stdout"
+        w.puts "# #{service_name}.logger = $stdout"
         w.puts
-        w.begin "class #{service_name(wsdl)}Test < Test::Unit::TestCase"
-        wsdl.interface.operations.each do |operation|
+        w.begin "class #{service_name}Test < Test::Unit::TestCase"
+        @wsdl.interface.operations.each do |operation|
           w.puts
           w.begin "def test_#{underscore(operation.name)}"
-          w.puts "result = #{service_name(wsdl)}.#{method_name(operation)}"
+          w.puts "result = #{service_name}.#{method_name(operation)}"
           w.end
         end
         w.end

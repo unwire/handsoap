@@ -47,29 +47,44 @@ class HandsoapGenerator < Rails::Generator::Base
     # Wsdl argument is required.
     usage if @args.empty?
     @wsdl_uri = @args.shift
+    @basename = @args.shift
   end
 
+  # def add_options!(opt)
+  #   opt.on('--soap-actions') { |value| options[:soap_actions] = true }
+  #   opt.on('--no-soap-actions') { |value| options[:soap_actions] = false }
+  # end
+
   def banner
-		"Generates the scaffold for a Handsoap binding."+
+		"Generates the scaffold for a Handsoap binding." +
       "\n" + "You still have to fill in most of the meat, but this gives you a head start." +
-			"\n" + "Usage: #{$0} #{spec.name} URI" +
-      "\n" + "  URI       URI of the WSDL to generate from"
+			"\n" + "Usage: #{$0} #{spec.name} URI [BASENAME] [OPTIONS]" +
+      "\n" + "    URI       URI of the WSDL to generate from" +
+      "\n" + "    BASENAME  The basename to use for the service. If omitted, the name will be deducted from the URL."  +
+      # "\n"  +
+      # "\n" + "The following options are available:" +
+      # "\n" + "    --soap-actions     If set, stubs will be generated with soap-action parameters. (Default)" +
+      # "\n" + "    --no-soap-actions  If set, stubs will be generated without soap-action parameters." +
+      # "\n" + "    --soap-version-1   If set, the generator will look for SOAP v 1.1 endpoints." +
+      # "\n" + "    --soap-version-2   If set, the generator will look for SOAP v 1.2 endpoints." +
+      ""
   end
 
   def manifest
     wsdl = Handsoap::Parser::Wsdl.read(@wsdl_uri)
+    compiler = Handsoap::Compiler.new(wsdl, @basename)
     protocol = wsdl.preferred_protocol
-    file_name = Handsoap::Compiler.service_basename(wsdl)
+    file_name = compiler.service_basename
     record do |m|
       m.directory "app"
       m.directory "app/models"
       m.file_contents "app/models/#{file_name}_service.rb" do |file|
-        file.write Handsoap::Compiler.compile_service(wsdl, protocol, :soap_actions)
+        file.write compiler.compile_service(protocol, :soap_actions)
       end
       m.directory "test"
       m.directory "test/integration"
       m.file_contents "test/integration/#{file_name}_service_test.rb" do |file|
-        file.write Handsoap::Compiler.compile_test(wsdl, protocol)
+        file.write compiler.compile_test(protocol)
       end
       # TODO
       # Ask user about which endpoints to use ?
@@ -79,7 +94,7 @@ class HandsoapGenerator < Rails::Generator::Base
         out.puts "  You should copy these to the appropriate environment files."
         out.puts "  (Eg. `config/environments/*.rb`)"
         out.puts "----"
-        out.puts Handsoap::Compiler.compile_endpoints(wsdl, protocol)
+        out.puts compiler.compile_endpoints(protocol)
         out.puts "----"
       end
     end
