@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- http://www2.roguewave.com/support/docs/leif/leif/html/soapworxug/A-2.html -->
+<definitions
+  name="WeatherSummary"
+  targetNamespace=
+    "http://www.roguewave.com/soapworx/examples/WeatherSummary.wsdl"
+  xmlns="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:tns=
+    "http://www.roguewave.com/soapworx/examples/WeatherSummary.wsdl"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:wsx=
+   "http://www.roguewave.com/soapworx/examples/WeatherSummary.xsd">
+
+  <types>
+    <xsd:schema
+      targetNamespace=
+        "http://www.roguewave.com/soapworx/examples/WeatherSummary.xsd"
+      xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+      xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+      xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:complexType name="WeatherSummary">
+        <xsd:sequence>
+          <xsd:element maxOccurs="1" minOccurs="1" name="zipcode"
+             nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="1" name="windSpeed"
+             nillable="true" type="xsd:unsignedInt"/>
+          <xsd:element maxOccurs="1" minOccurs="1" name="sky"
+             nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="1" name="temp"
+             nillable="true" type="xsd:int"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </types>
+
+  <message name="getSummary">
+    <part name="zipcode" type="xsd:string"/>
+  </message>
+  <message name="updateWeather">
+    <part name="weatherData" type="wsx:WeatherSummary"/>
+    <part name="port" type="xsd:string"/>
+    <part name="transportName" type="xsd:string"/>
+    <part name="weatherData" type="wsx:WeatherSummary"/>
+  </message>
+  <message name="getSummaryResponse">
+    <part name="weatherData" type="wsx:WeatherSummary"/>
+  </message>
+  <portType name="WeatherSummary">
+    <!-- request-responserequest-response -->
+    <operation name="getSummary">
+      <input message="tns:getSummary"/>
+      <output message="tns:getSummaryResponse"/>
+    </operation>
+    <!-- One-way -->
+    <operation name="updateWeather">
+      <input message="tns:updateWeather"/>
+    </operation>
+    <!-- Notification -->
+    <operation name="weatherNotification">
+      <output message="tns:getSummaryResponse"/>
+    </operation>
+  </portType>
+
+  <binding name="WeatherSummary" type="tns:WeatherSummary">
+    <soap:binding style="rpc"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="getSummary">
+      <soap:operation soapAction="getSummary"/>
+      <input>
+        <soap:body use="encoded"
+           encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+           namespace="http://www.roguewave.com/soapworx/examples"/>
+        <soap:header message="tns:getSummary" part="header" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="encoded"
+          encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+          namespace="http://www.roguewave.com/soapworx/examples"/>
+      </output>
+    </operation>
+    <operation name="updateWeather">
+      <soap:operation soapAction="updateWeather"/>
+      <input>
+        <soap:body use="encoded"
+          encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+          namespace="http://www.roguewave.com/soapworx/examples"/>
+      </input>
+    </operation>
+    <operation name="weatherNotification">
+      <soap:operation soapAction="weatherNotification"/>
+      <output>
+        <soap:body use="encoded"
+          encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+          namespace="http://www.roguewave.com/soapworx/examples"/>
+      </output>
+    </operation>
+  </binding>
+
+  <service name="WeatherSummary">
+    <documentation>WeatherSummary</documentation>
+    <port name="WeatherSummary" binding="tns:WeatherSummary">
+      <soap:address
+        location="http://localhost:8090/weather/WeatherSummary"/>
+    </port>
+  </service>
+</definitions>
