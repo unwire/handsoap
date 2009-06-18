@@ -1,6 +1,12 @@
 Handsoap
 ===
 
+Install
+---
+
+    gem sources -a http://gems.github.com
+    sudo gem install troelskn-handsoap
+
 What
 ---
 Handsoap is a library for creating SOAP clients in Ruby.
