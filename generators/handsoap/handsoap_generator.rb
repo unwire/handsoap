@@ -66,9 +66,9 @@ class HandsoapGenerator < Rails::Generator::Base
       m.file_contents "app/models/#{file_name}_service.rb" do |file|
         file.write Handsoap::Compiler.compile_service(wsdl, protocol, :soap_actions)
       end
-      m.directory "tests"
-      m.directory "tests/integration"
-      m.file_contents "tests/integration/#{file_name}_service_test.rb" do |file|
+      m.directory "test"
+      m.directory "test/integration"
+      m.file_contents "test/integration/#{file_name}_service_test.rb" do |file|
         file.write Handsoap::Compiler.compile_test(wsdl, protocol)
       end
       # TODO
