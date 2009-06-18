@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
 <<<<<<< HEAD:handsoap.gemspec
 <<<<<<< HEAD:handsoap.gemspec
 <<<<<<< HEAD:handsoap.gemspec
+<<<<<<< HEAD:handsoap.gemspec
   s.version = "0.1.2"
 =======
   s.version = "0.1.0"
@@ -50,6 +51,9 @@ Gem::Specification.new do |s|
 =======
   s.version = "0.2.4"
 >>>>>>> Regenerated gemspec for version 0.2.4:handsoap.gemspec
+=======
+  s.version = "0.2.5"
+>>>>>>> Regenerated gemspec for version 0.2.5:handsoap.gemspec
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Troels Knak-Nielsen"]
