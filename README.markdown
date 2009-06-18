@@ -78,13 +78,14 @@ Recommendations
 
 ###Workflow
 
-1. Find the wsdl for the service you want to consume.
+1. You need a WSDL for the service you want to consume.
 
 2. Figure out the url for the endpoint, as well as the protocol version. Put this in a config file.
 	 * To find the endpoint, look inside the wsdl, for `<soap:address location="..">`
 
 3. Create a service class. Add endpoints and protocol. Alias needed namespace(s).
    * To find the namespace(s), look in the samples from soapUI. It will be imported as `v1`
+   * Note that you can now use the provided generator to skip this step.
 
 4. Open the wsdl in [soapUI](http://www.soapui.org/).
 
@@ -118,6 +119,12 @@ The configuration could look like this:
 If you use Rails, you will need to load the gem from the `config/environment.rb` file, using:
 
     config.gem 'troelskn-handsoap', :lib => 'handsoap', :source => "http://gems.github.com"
+
+###Generator
+
+From version 0.2.0 Handsoap sports a generator, that creates the service class + an integration test case. This is just a rough starting point for your service - You still have to fill out the actual mappings to/from xml, but at least it saves your some copy-pasting from this guide.
+
+To use the generator, create a Rails project and run the script `script/generate handsoap`, giving the url of the WSDL.
 
 ###Service class
 
