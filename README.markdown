@@ -5,6 +5,8 @@ What
 ---
 Handsoap is a library for creating SOAP clients in Ruby.
 
+![Handsoap](http://ny-image0.etsy.com/il_430xN.68558416.jpg)
+
 Why
 ---
 
