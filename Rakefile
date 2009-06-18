@@ -10,6 +10,7 @@ begin
     gemspec.authors = ["Troels Knak-Nielsen"]
     gemspec.add_dependency "nokogiri", ">= 1.2.3"
     gemspec.add_dependency "curb", ">= 0.3.2"
+    gemspec.add_dependency "htmlentities", ">= 4.0.0"
 #    gemspec.add_dependency "httpclient", ">= 2.1.2"
   end
 rescue LoadError
