@@ -18,3 +18,13 @@ begin
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
 end
+
+require 'rake/testtask'
+Rake::TestTask.new(:test) do |test|
+  test.test_files = FileList.new('tests/**/*_test.rb') do |list|
+    list.exclude 'tests/benchmark_integration_test.rb'
+    list.exclude 'tests/service_integration_test.rb'
+  end
+  test.libs << 'tests'
+  test.verbose = true
+end
