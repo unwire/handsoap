@@ -123,6 +123,21 @@ Exists="true">http://location_to_thumbnail_for_www.a9.com</aws:Thumbnail>
     doc = create_default_document
     assert_equal "bl\303\245b\303\246rgr\303\270d", doc.xpath("//aws:Thumbnail/@attr-test").first.to_s
   end
+  def test_error_on_parsing_non_xml
+    assert_raise Handsoap::XmlQueryFront::ParseError do
+      doc = Handsoap::XmlQueryFront.parse_string("blah", driver)
+    end
+  end
+  def test_error_on_parsing_empty_string
+    assert_raise Handsoap::XmlQueryFront::ParseError do
+      doc = Handsoap::XmlQueryFront.parse_string("", driver)
+    end
+  end
+  def test_error_on_parsing_empty_document
+    assert_raise Handsoap::XmlQueryFront::ParseError do
+      doc = Handsoap::XmlQueryFront.parse_string("<?xml version='1.0' ?>", driver)
+    end
+  end
 end
 
 class TestOfREXMLDriver < Test::Unit::TestCase

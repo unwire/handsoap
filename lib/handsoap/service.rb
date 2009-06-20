@@ -1,35 +1,7 @@
 # -*- coding: utf-8 -*-
-require 'rubygems'
-require 'nokogiri'
 require 'time'
 require 'handsoap/xml_mason'
-
-# Nokogiri doesn't have a way of getting plain strings out,
-# so this monkeypatch adds that capability ..
-module Utf8StringPatch
-  def to_utf8
-    # HTMLEntities.decode_entities(self.serialize(:encoding => 'UTF-8'))
-    if Gem.loaded_specs['nokogiri'].version >= Gem::Version.new('1.3.0')
-      self.serialize(:encoding => 'UTF-8').gsub('&lt;', '<').gsub('&gt;', '>').gsub('&quot;', '"').gsub('&apos;', "'").gsub('&amp;', '&')
-    else
-      self.serialize('UTF-8').gsub('&lt;', '<').gsub('&gt;', '>').gsub('&quot;', '"').gsub('&apos;', "'").gsub('&amp;', '&')
-    end
-  end
-end
-
-module Nokogiri
-  module XML
-    class Text
-      include Utf8StringPatch
-    end
-    class Nodeset
-      include Utf8StringPatch
-    end
-    class Attr
-      include Utf8StringPatch
-    end
-  end
-end
+require 'handsoap/xml_query_front'
 
 module Handsoap
 
@@ -42,6 +14,14 @@ module Handsoap
     require 'httpclient' if driver == :httpclient
     require 'curb' if driver == :curb
     return driver
+  end
+
+  def self.xml_query_driver
+    @xml_query_driver || (self.xml_query_driver = :nokogiri)
+  end
+
+  def self.xml_query_driver=(driver)
+    @xml_query_driver = Handsoap::XmlQueryFront.load_driver!(driver)
   end
 
   SOAP_NAMESPACE = { 1 => 'http://schemas.xmlsoap.org/soap/envelope/', 2 => 'http://www.w3.org/2001/12/soap-encoding' }
@@ -58,8 +38,11 @@ module Handsoap
     end
     def document
       if @document == :lazy
-        doc = Nokogiri::XML(@http_body)
-        @document = (doc && doc.root && doc.errors.empty?) ? doc : nil
+        begin
+          @document = Handsoap::XmlQueryFront.parse_string(@http_body, Handsoap.xml_query_driver)
+        rescue Handsoap::XmlQueryFront::ParseError => ex
+          @document = nil
+        end
       end
       return @document
     end

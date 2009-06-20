@@ -6,21 +6,44 @@
 # allowing seamless switching between the underlying implementations.
 module Handsoap
   module XmlQueryFront
-    # Returns a wrapped XML parser, using the requested driver
-    def self.parse_string(xml_string, driver = :rexml)
+
+    class ParseError < RuntimeError; end
+
+    # Loads requirements for a driver
+    def self.load_driver!(driver)
       if driver == :rexml
         require 'rexml/document'
-        XmlQueryFront::REXMLDriver.new(REXML::Document.new(xml_string))
       elsif driver == :nokogiri
         require 'nokogiri'
-        XmlQueryFront::NokogiriDriver.new(Nokogiri::XML(xml_string))
       elsif driver == :libxml
         require 'libxml'
-        XmlQueryFront::LibXMLDriver.new(LibXML::XML::Parser.string(xml_string).parse)
       else
         raise "Unknown driver #{driver}"
       end
+      return driver
     end
+
+    # Returns a wrapped XML parser, using the requested driver
+    def self.parse_string(xml_string, driver = :rexml)
+      load_driver!(driver)
+      if driver == :rexml
+        doc = REXML::Document.new(xml_string)
+        raise ParseError.new if doc.root.nil?
+        XmlQueryFront::REXMLDriver.new(doc)
+      elsif driver == :nokogiri
+        doc = Nokogiri::XML(xml_string)
+        raise ParseError.new unless (doc && doc.root && doc.errors.empty?)
+        XmlQueryFront::NokogiriDriver.new(doc)
+      elsif driver == :libxml
+        begin
+          LibXML::XML::Error.set_handler &LibXML::XML::Error::QUIET_HANDLER
+          doc = XmlQueryFront::LibXMLDriver.new(LibXML::XML::Parser.string(xml_string).parse)
+        rescue ArgumentError, LibXML::XML::Error => ex
+          raise ParseError.new
+        end
+      end
+    end
+
     module BaseDriver
       def initialize(element, namespaces = {})
         @element = element
@@ -61,6 +84,7 @@ module Handsoap
         self.xpath(expression)
       end
     end
+
     class LibXMLDriver
       include BaseDriver
       def node_name
@@ -80,6 +104,7 @@ module Handsoap
         end
       end
     end
+
     class REXMLDriver
       include BaseDriver
       def node_name
@@ -100,6 +125,7 @@ module Handsoap
         end
       end
     end
+
     class NokogiriDriver
       include BaseDriver
       def node_name
