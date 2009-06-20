@@ -2,27 +2,43 @@
 
 module Handsoap
 
+  # XmlMason is a simple XML builder.
   module XmlMason
 
-    HTML_ESCAPE = { '&' => '&amp;', '"' => '&quot;', '>' => '&gt;', '<' => '&lt;' }
+    XML_ESCAPE = { '&' => '&amp;', '"' => '&quot;', '>' => '&gt;', '<' => '&lt;' }
 
-    def self.html_escape(s)
-      s.to_s.gsub(/[&"><]/) { |special| HTML_ESCAPE[special] }
+    def self.xml_escape(s)
+      s.to_s.gsub(/[&"><]/) { |special| XML_ESCAPE[special] }
     end
 
     class Node
       def initialize
         @namespaces = {}
       end
-      def add(node_name, value = nil, *flags)
+      def add(node_name, value = nil, *flags) # :yields Element
         prefix, name = parse_ns(node_name)
         node = append_child Element.new(self, prefix, name, value, flags)
         if block_given?
           yield node
         end
       end
+      # Registers a prefix for a namespace.
+      #
+      # You must register a namespace, before you can refer it.
       def alias(prefix, namespaces)
         @namespaces[prefix] = namespaces
+      end
+      # Finds the first element whos +node_name+ equals +name+
+      #
+      # Doesn't regard namespaces/prefixes.
+      def find(name)
+        raise NotImplementedError.new
+      end
+      # Finds all elements whos +node_name+ equals +name+
+      #
+      # Doesn't regard namespaces/prefixes.
+      def find_all(name)
+        raise NotImplementedError.new
       end
       def parse_ns(name)
         matches = name.match /^([^:]+):(.*)$/
@@ -36,7 +52,7 @@ module Handsoap
     end
 
     class Document < Node
-      def initialize
+      def initialize # :yields Document
         super
         @document_element = nil
         if block_given?
@@ -74,7 +90,7 @@ module Handsoap
         @text = text
       end
       def to_s(indentation = '')
-        XmlMason.html_escape(@text)
+        XmlMason.xml_escape(@text)
       end
     end
 
@@ -85,7 +101,7 @@ module Handsoap
     end
 
     class Element < Node
-      def initialize(parent, prefix, node_name, value = nil, flags = [])
+      def initialize(parent, prefix, node_name, value = nil, flags = []) # :yields Element
         super()
 #         if prefix.to_s == ""
 #           raise "missing prefix"
@@ -102,12 +118,17 @@ module Handsoap
           yield self
         end
       end
+      # Returns the document that this element belongs to, or self if this is the document.
       def document
         @parent.respond_to?(:document) ? @parent.document : @parent
       end
+      # Returns the qname (prefix:nodename)
       def full_name
         @prefix.nil? ? @node_name : (@prefix + ":" + @node_name)
       end
+      # Adds a child node.
+      #
+      # You usually won't need to call this method, but will rather use +add+
       def append_child(node)
         if value_node?
           raise "Element already has a text value. Can't add nodes"
@@ -115,6 +136,11 @@ module Handsoap
         @children << node
         return node
       end
+      # Sets the inner text of this element.
+      #
+      # By default the string is escaped, but you can pass the flag +:raw+ to inject XML.
+      #
+      # You usually won't need to call this method, but will rather use +add+
       def set_value(value, *flags)
         if @children.length > 0
           raise "Element already has children. Can't set value"
@@ -125,6 +151,7 @@ module Handsoap
           @children = [TextNode.new(value)]
         end
       end
+      # Sets the value of an attribute.
       def set_attr(name, value)
         full_name = parse_ns(name).join(":")
         @attributes[name] = value
@@ -171,8 +198,8 @@ module Handsoap
         if @prefix && (not defines_namespace?(@prefix))
           set_attr "xmlns:#{@prefix}", get_namespace(@prefix)
         end
-        name = XmlMason.html_escape(full_name)
-        attr = (@attributes.any? ? (" " + @attributes.map { |key, value| XmlMason.html_escape(key) + '="' + XmlMason.html_escape(value) + '"' }.join(" ")) : "")
+        name = XmlMason.xml_escape(full_name)
+        attr = (@attributes.any? ? (" " + @attributes.map { |key, value| XmlMason.xml_escape(key) + '="' + XmlMason.xml_escape(value) + '"' }.join(" ")) : "")
         if @children.any?
           if value_node?
             children = @children[0].to_s(indentation + "  ")
