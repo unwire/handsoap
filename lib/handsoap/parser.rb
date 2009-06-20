@@ -5,7 +5,7 @@ require 'uri'
 require 'nokogiri'
 
 module Handsoap
-  module Parser
+  module Parser #:nodoc: all
     class Interface
       attr_accessor :name, :operations
 

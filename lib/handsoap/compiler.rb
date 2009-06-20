@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 module Handsoap
-    class CodeWriter
+    class CodeWriter #:nodoc: all
 
       def initialize
         @buffer = ""
@@ -35,7 +35,7 @@ module Handsoap
       end
     end
 
-  class Compiler
+  class Compiler #:nodoc: all
 
     def initialize(wsdl, basename = nil)
       @wsdl = wsdl

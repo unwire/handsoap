@@ -149,12 +149,12 @@ module Handsoap
     #
     # +options+ currently takes one option +:soap_action+, which can be one of:
     #
-    # +:auto+ sends a SOAPAction http header, deduced from the action name. (This is the default)
+    # :auto sends a SOAPAction http header, deduced from the action name. (This is the default)
     #
     # +String+ sends a SOAPAction http header.
     #
     # +nil+ sends no SOAPAction http header.
-    def invoke(action, options = { :soap_action => :auto }, &block) # :yields Handsoap::XmlMason::Element
+    def invoke(action, options = { :soap_action => :auto }, &block) # :yields: Handsoap::XmlMason::Element
       if action
         if options.kind_of? String
           options = { :soap_action => options }
@@ -228,7 +228,7 @@ module Handsoap
       return if n.nil?
       Time.iso8601(n.to_s)
     end
-    def debug(message = nil) # :nodoc
+    def debug(message = nil) #:nodoc:
       if @@logger
         if message
           @@logger.puts(message)
@@ -285,7 +285,7 @@ module Handsoap
       return soap_response
     end
     # Creates a standard SOAP envelope and yields the +Body+ element.
-    def make_envelope
+    def make_envelope # :yields: Handsoap::XmlMason::Element
       doc = XmlMason::Document.new do |doc|
         doc.alias 'env', self.class.envelope_namespace
         doc.add "env:Envelope" do |env|

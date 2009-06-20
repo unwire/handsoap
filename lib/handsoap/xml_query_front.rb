@@ -212,7 +212,7 @@ module Handsoap
       def node_name
         @element.name
       end
-      def self.serialize_args # :nodoc
+      def self.serialize_args #:nodoc:
         @serialize_args ||= if Gem.loaded_specs['nokogiri'].version >= Gem::Version.new('1.3.0')
                               { :encoding => 'UTF-8' }
                             else

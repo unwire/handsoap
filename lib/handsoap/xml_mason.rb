@@ -15,7 +15,7 @@ module Handsoap
       def initialize
         @namespaces = {}
       end
-      def add(node_name, value = nil, *flags) # :yields Element
+      def add(node_name, value = nil, *flags) # :yields: Handsoap::XmlMason::Element
         prefix, name = parse_ns(node_name)
         node = append_child Element.new(self, prefix, name, value, flags)
         if block_given?
@@ -52,7 +52,7 @@ module Handsoap
     end
 
     class Document < Node
-      def initialize # :yields Document
+      def initialize # :yields: Document
         super
         @document_element = nil
         if block_given?
@@ -101,7 +101,7 @@ module Handsoap
     end
 
     class Element < Node
-      def initialize(parent, prefix, node_name, value = nil, flags = []) # :yields Element
+      def initialize(parent, prefix, node_name, value = nil, flags = []) # :yields: Handsoap::XmlMason::Element
         super()
 #         if prefix.to_s == ""
 #           raise "missing prefix"
@@ -138,7 +138,7 @@ module Handsoap
       end
       # Sets the inner text of this element.
       #
-      # By default the string is escaped, but you can pass the flag +:raw+ to inject XML.
+      # By default the string is escaped, but you can pass the flag :raw to inject XML.
       #
       # You usually won't need to call this method, but will rather use +add+
       def set_value(value, *flags)
