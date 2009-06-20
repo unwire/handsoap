@@ -13,6 +13,8 @@ Handsoap is a library for creating SOAP clients in Ruby.
 
 [Watch a tutorial](http://www.vimeo.com/4813848), showing how to use Handsoap. The final application can be found at: [http://github.com/troelskn/handsoap-example/tree/master](http://github.com/troelskn/handsoap-example/tree/master)
 
+API docs are at [http://rdoc.info/projects/troelskn/handsoap](http://rdoc.info/projects/troelskn/handsoap)
+
 ![Handsoap](http://ny-image0.etsy.com/il_430xN.68558416.jpg)
 
 Why

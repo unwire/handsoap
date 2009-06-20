@@ -5,6 +5,9 @@ require 'uri'
 require 'nokogiri'
 
 module Handsoap
+  # Classes for parsing a WSDL.
+  #
+  # Used internally by the generator.
   module Parser #:nodoc: all
     class Interface
       attr_accessor :name, :operations

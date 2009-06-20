@@ -1,40 +1,42 @@
 # -*- coding: utf-8 -*-
 module Handsoap
-    class CodeWriter #:nodoc: all
+  # Used internally to generate Ruby source code
+  class CodeWriter #:nodoc: all
 
-      def initialize
-        @buffer = ""
-        @indentation = 0
-      end
-
-      def begin(text)
-        puts(text)
-        indent
-      end
-
-      def end(str = "end")
-        unindent
-        puts(str)
-      end
-
-      def puts(text = "")
-        @buffer << text.gsub(/^(.*)$/, ("  " * @indentation) + "\\1")
-        @buffer << "\n" # unless @buffer.match(/\n$/)
-      end
-
-      def indent
-        @indentation = @indentation + 1
-      end
-
-      def unindent
-        @indentation = @indentation - 1
-      end
-
-      def to_s
-        @buffer
-      end
+    def initialize
+      @buffer = ""
+      @indentation = 0
     end
 
+    def begin(text)
+      puts(text)
+      indent
+    end
+
+    def end(str = "end")
+      unindent
+      puts(str)
+    end
+
+    def puts(text = "")
+      @buffer << text.gsub(/^(.*)$/, ("  " * @indentation) + "\\1")
+      @buffer << "\n" # unless @buffer.match(/\n$/)
+    end
+
+    def indent
+      @indentation = @indentation + 1
+    end
+
+    def unindent
+      @indentation = @indentation - 1
+    end
+
+    def to_s
+      @buffer
+    end
+  end
+
+  # Used internally by the generator to generate a Service stub.
   class Compiler #:nodoc: all
 
     def initialize(wsdl, basename = nil)
