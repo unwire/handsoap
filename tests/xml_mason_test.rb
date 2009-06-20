@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'rubygems'
 $LOAD_PATH << "#{File.dirname(__FILE__)}/../lib/"
-require "handsoap.rb"
+require "handsoap"
 require 'handsoap/xml_mason'
 
 require 'test/unit'
