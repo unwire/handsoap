@@ -138,6 +138,14 @@ Exists="true">http://location_to_thumbnail_for_www.a9.com</aws:Thumbnail>
       doc = Handsoap::XmlQueryFront.parse_string("<?xml version='1.0' ?>", driver)
     end
   end
+  def test_serialize
+    doc = Handsoap::XmlQueryFront.parse_string('<?xml version="1.0" encoding="UTF-8"?><foo><bar>blah</bar></foo>', driver)
+    assert doc.to_xml.match("<foo>
+  <bar>(
+    )?blah(
+  )?</bar>
+</foo>")
+  end
 end
 
 class TestOfREXMLDriver < Test::Unit::TestCase

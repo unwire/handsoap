@@ -143,7 +143,18 @@ module Handsoap
         super
       end
     end
-    def invoke(action, options = { :soap_action => :auto }, &block)
+    # Creates an XML document and sends it over HTTP.
+    #
+    # +action+ is the QName of the rootnode of the envelope.
+    #
+    # +options+ currently takes one option +:soap_action+, which can be one of:
+    #
+    # +:auto+ sends a SOAPAction http header, deduced from the action name. (This is the default)
+    #
+    # +String+ sends a SOAPAction http header.
+    #
+    # +nil+ sends no SOAPAction http header.
+    def invoke(action, options = { :soap_action => :auto }, &block) # :yields Handsoap::XmlMason::Element
       if action
         if options.kind_of? String
           options = { :soap_action => options }
@@ -162,13 +173,21 @@ module Handsoap
         dispatch(doc, options[:soap_action])
       end
     end
+    # Hook that is called before the message is dispatched.
+    #
+    # You can override this to provide filtering and logging.
     def on_before_dispatch
     end
+    # Hook that is called if the dispatch returns a +Fault+.
+    #
+    # Default behaviour is to raise the Fault, but you can override this to provide logging and more fine-grained handling faults.
     def on_fault(fault)
       raise fault
     end
     private
     # Helper to serialize a node into a ruby string
+    #
+    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_s
     def xml_to_str(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
@@ -176,6 +195,8 @@ module Handsoap
     end
     alias_method :xml_to_s, :xml_to_str
     # Helper to serialize a node into a ruby integer
+    #
+    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_i
     def xml_to_int(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
@@ -183,6 +204,8 @@ module Handsoap
     end
     alias_method :xml_to_i, :xml_to_int
     # Helper to serialize a node into a ruby float
+    #
+    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_f
     def xml_to_float(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
@@ -190,18 +213,22 @@ module Handsoap
     end
     alias_method :xml_to_f, :xml_to_float
     # Helper to serialize a node into a ruby boolean
+    #
+    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_boolean
     def xml_to_bool(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
       n.to_s == "true"
     end
     # Helper to serialize a node into a ruby Time object
+    #
+    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_date
     def xml_to_date(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
       Time.iso8601(n.to_s)
     end
-    def debug(message = nil)
+    def debug(message = nil) # :nodoc
       if @@logger
         if message
           @@logger.puts(message)
@@ -211,8 +238,9 @@ module Handsoap
         end
       end
     end
+    # Takes care of the HTTP level dispatch.
     def dispatch(doc, action)
-      on_before_dispatch()
+      on_before_dispatch
       headers = {
         "Content-Type" => "#{self.class.request_content_type};charset=UTF-8"
       }
@@ -256,6 +284,7 @@ module Handsoap
       end
       return soap_response
     end
+    # Creates a standard SOAP envelope and yields the +Body+ element.
     def make_envelope
       doc = XmlMason::Document.new do |doc|
         doc.alias 'env', self.class.envelope_namespace
@@ -275,11 +304,11 @@ module Handsoap
   def self.pretty_format_envelope(xml_string)
     if /^<.*:Envelope/.match(xml_string)
       begin
-        doc = Nokogiri::XML(xml_string)
+        doc = Handsoap::XmlQueryFront.parse_string(xml_string, Handsoap.xml_query_driver)
       rescue Exception => ex
         return "Formatting failed: " + ex.to_s
       end
-      return doc.to_s
+      return doc.to_xml
       # return "\n\e[1;33m" + doc.to_s + "\e[0m"
     end
     return xml_string
