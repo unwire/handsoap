@@ -8,12 +8,9 @@ begin
     gemspec.homepage = "http://github.com/troelskn/handsoap"
     gemspec.description = gemspec.summary
     gemspec.authors = ["Troels Knak-Nielsen"]
-    gemspec.add_dependency "nokogiri", ">= 1.2.3"
-		# We can't depend on these in the gem, since they are pluggable at runtime. You need one or the other though.
-#    gemspec.add_dependency "curb", ">= 0.3.2"
-#    gemspec.add_dependency "httpclient", ">= 2.1.2"
+    gemspec.requirements << "You need to install either \"curb\" or \"httpclient\", using one of:\n    gem install curb\n    gem install httpclient"
+    gemspec.requirements << "It is recommended that you install either \"nokogiri\" or \"libxml-ruby\""
     gemspec.files = FileList['lib/**/*.rb', 'generators/handsoap/templates', 'generators/**/*', '[A-Z]*.*'].to_a
-
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
