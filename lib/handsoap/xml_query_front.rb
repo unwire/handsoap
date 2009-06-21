@@ -76,7 +76,7 @@ module Handsoap
       end
       # Checks that an xpath-query doesn't refer to any undefined prefixes in +ns+
       def assert_prefixes!(expression, ns)
-        expression.scan(/([a-zA-Z_][a-zA-Z0-9_.-]*):/).map{|m| m[0] }.each do |prefix|
+        expression.scan(/([a-zA-Z_][a-zA-Z0-9_.-]*):[^:]+/).map{|m| m[0] }.each do |prefix|
           raise "Undefined prefix '#{prefix}'" if ns[prefix].nil?
         end
       end

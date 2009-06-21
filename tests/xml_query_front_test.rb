@@ -74,6 +74,10 @@ Exists="true">http://location_to_thumbnail_for_www.a9.com</aws:Thumbnail>
       doc.xpath("//aws:OperationRequest")
     end
   end
+  def test_axis_isnt_interpreted_as_a_namespace
+    doc = Handsoap::XmlQueryFront.parse_string(xml_source, driver)
+    doc.xpath('/env:Envelope/env:Body/descendant-or-self::env:Fault', { 'env' => "void://" })
+  end
   def test_query_for_defined_prefix
     doc = Handsoap::XmlQueryFront.parse_string(xml_source, driver)
     doc.add_namespace("aws", "http://ast.amazonaws.com/doc/2006-05-15/")
