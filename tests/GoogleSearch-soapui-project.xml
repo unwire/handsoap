@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project name="GoogleSearch" resourceRoot="${projectDir}" soapui-version="2.5.1" xmlns:con="http://eviware.com/soapui/config"><con:settings><con:setting id="ProjectSettings@projectRoot">/home/tkn/public/handsoap/tests</con:setting></con:settings><con:interface xsi:type="con:WsdlInterface" wsaVersion="NONE" name="GoogleSearchBinding" type="wsdl" bindingName="{urn:GoogleSearch}GoogleSearchBinding" soapVersion="1_1" anonymous="optional" definition="http://api.google.com/GoogleSearch.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="http://api.google.com/GoogleSearch.wsdl"><con:part><con:url>http://api.google.com/GoogleSearch.wsdl</con:url><con:content><![CDATA[<!--WSDL description of the Google Web APIs.
+     The Google Web APIs are in beta release. All interfaces are subject to
+     change as we refine and extend our APIs. Please see the terms of use
+     for more information.-->
+<!--Revision 2002-08-16-->
+<definitions name="GoogleSearch" targetNamespace="urn:GoogleSearch" xmlns:typens="urn:GoogleSearch" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <!--Types for search - result elements, directory categories-->
+  <types>
+    <xsd:schema targetNamespace="urn:GoogleSearch" xmlns="http://www.w3.org/2001/XMLSchema">
+      <xsd:complexType name="GoogleSearchResult">
+        <xsd:all>
+          <xsd:element name="documentFiltering" type="xsd:boolean"/>
+          <xsd:element name="searchComments" type="xsd:string"/>
+          <xsd:element name="estimatedTotalResultsCount" type="xsd:int"/>
+          <xsd:element name="estimateIsExact" type="xsd:boolean"/>
+          <xsd:element name="resultElements" type="typens:ResultElementArray"/>
+          <xsd:element name="searchQuery" type="xsd:string"/>
+          <xsd:element name="startIndex" type="xsd:int"/>
+          <xsd:element name="endIndex" type="xsd:int"/>
+          <xsd:element name="searchTips" type="xsd:string"/>
+          <xsd:element name="directoryCategories" type="typens:DirectoryCategoryArray"/>
+          <xsd:element name="searchTime" type="xsd:double"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="ResultElement">
+        <xsd:all>
+          <xsd:element name="summary" type="xsd:string"/>
+          <xsd:element name="URL" type="xsd:string"/>
+          <xsd:element name="snippet" type="xsd:string"/>
+          <xsd:element name="title" type="xsd:string"/>
+          <xsd:element name="cachedSize" type="xsd:string"/>
+          <xsd:element name="relatedInformationPresent" type="xsd:boolean"/>
+          <xsd:element name="hostName" type="xsd:string"/>
+          <xsd:element name="directoryCategory" type="typens:DirectoryCategory"/>
+          <xsd:element name="directoryTitle" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+      <xsd:complexType name="ResultElementArray">
+        <xsd:complexContent>
+          <xsd:restriction base="soapenc:Array">
+            <xsd:attribute ref="soapenc:arrayType" wsdl:arrayType="typens:ResultElement[]"/>
+          </xsd:restriction>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="DirectoryCategoryArray">
+        <xsd:complexContent>
+          <xsd:restriction base="soapenc:Array">
+            <xsd:attribute ref="soapenc:arrayType" wsdl:arrayType="typens:DirectoryCategory[]"/>
+          </xsd:restriction>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="DirectoryCategory">
+        <xsd:all>
+          <xsd:element name="fullViewableName" type="xsd:string"/>
+          <xsd:element name="specialEncoding" type="xsd:string"/>
+        </xsd:all>
+      </xsd:complexType>
+    </xsd:schema>
+  </types>
+  <!--Messages for Google Web APIs - cached page, search, spelling.-->
+  <message name="doGetCachedPage">
+    <part name="key" type="xsd:string"/>
+    <part name="url" type="xsd:string"/>
+  </message>
+  <message name="doGetCachedPageResponse">
+    <part name="return" type="xsd:base64Binary"/>
+  </message>
+  <message name="doSpellingSuggestion">
+    <part name="key" type="xsd:string"/>
+    <part name="phrase" type="xsd:string"/>
+  </message>
+  <message name="doSpellingSuggestionResponse">
+    <part name="return" type="xsd:string"/>
+  </message>
+  <!--note, ie and oe are ignored by server; all traffic is UTF-8.-->
+  <message name="doGoogleSearch">
+    <part name="key" type="xsd:string"/>
+    <part name="q" type="xsd:string"/>
+    <part name="start" type="xsd:int"/>
+    <part name="maxResults" type="xsd:int"/>
+    <part name="filter" type="xsd:boolean"/>
+    <part name="restrict" type="xsd:string"/>
+    <part name="safeSearch" type="xsd:boolean"/>
+    <part name="lr" type="xsd:string"/>
+    <part name="ie" type="xsd:string"/>
+    <part name="oe" type="xsd:string"/>
+  </message>
+  <message name="doGoogleSearchResponse">
+    <part name="return" type="typens:GoogleSearchResult"/>
+  </message>
+  <!--Port for Google Web APIs, "GoogleSearch"-->
+  <portType name="GoogleSearchPort">
+    <operation name="doGetCachedPage">
+      <input message="typens:doGetCachedPage"/>
+      <output message="typens:doGetCachedPageResponse"/>
+    </operation>
+    <operation name="doSpellingSuggestion">
+      <input message="typens:doSpellingSuggestion"/>
+      <output message="typens:doSpellingSuggestionResponse"/>
+    </operation>
+    <operation name="doGoogleSearch">
+      <input message="typens:doGoogleSearch"/>
+      <output message="typens:doGoogleSearchResponse"/>
+    </operation>
+  </portType>
+  <!--Binding for Google Web APIs - RPC, SOAP over HTTP-->
+  <binding name="GoogleSearchBinding" type="typens:GoogleSearchPort">
+    <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="doGetCachedPage">
+      <soap:operation soapAction="urn:GoogleSearchAction"/>
+      <input>
+        <soap:body use="encoded" namespace="urn:GoogleSearch" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:GoogleSearch" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+    <operation name="doSpellingSuggestion">
+      <soap:operation soapAction="urn:GoogleSearchAction"/>
+      <input>
+        <soap:body use="encoded" namespace="urn:GoogleSearch" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:GoogleSearch" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+    <operation name="doGoogleSearch">
+      <soap:operation soapAction="urn:GoogleSearchAction"/>
+      <input>
+        <soap:body use="encoded" namespace="urn:GoogleSearch" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </input>
+      <output>
+        <soap:body use="encoded" namespace="urn:GoogleSearch" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </output>
+    </operation>
+  </binding>
+  <!--Endpoint for Google Web APIs-->
+  <service name="GoogleSearchService">
+    <port name="GoogleSearchPort" binding="typens:GoogleSearchBinding">
+      <soap:address location="http://api.google.com/search/beta2"/>
+    </port>
+  </service>
+</definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://api.google.com/search/beta2</con:endpoint><con:endpoint>http://127.0.0.1:8088/mockGoogleSearchBinding</con:endpoint></con:endpoints><con:operation isOneWay="false" action="urn:GoogleSearchAction" name="doGetCachedPage" bindingOperationName="doGetCachedPage" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://api.google.com/search/beta2</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:GoogleSearch">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <urn:doGetCachedPage soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+         <key xsi:type="xsd:string">?</key>
+         <url xsi:type="xsd:string">?</url>
+      </urn:doGetCachedPage>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:GoogleSearch/GoogleSearchPort/doGetCachedPageRequest"/></con:call></con:operation><con:operation isOneWay="false" action="urn:GoogleSearchAction" name="doGoogleSearch" bindingOperationName="doGoogleSearch" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://api.google.com/search/beta2</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:GoogleSearch">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <urn:doGoogleSearch soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+         <key xsi:type="xsd:string">?</key>
+         <q xsi:type="xsd:string">?</q>
+         <start xsi:type="xsd:int">?</start>
+         <maxResults xsi:type="xsd:int">?</maxResults>
+         <filter xsi:type="xsd:boolean">?</filter>
+         <restrict xsi:type="xsd:string">?</restrict>
+         <safeSearch xsi:type="xsd:boolean">?</safeSearch>
+         <lr xsi:type="xsd:string">?</lr>
+         <ie xsi:type="xsd:string">?</ie>
+         <oe xsi:type="xsd:string">?</oe>
+      </urn:doGoogleSearch>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:GoogleSearch/GoogleSearchPort/doGoogleSearchRequest"/></con:call></con:operation><con:operation isOneWay="false" action="urn:GoogleSearchAction" name="doSpellingSuggestion" bindingOperationName="doSpellingSuggestion" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://api.google.com/search/beta2</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:GoogleSearch">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <urn:doSpellingSuggestion soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+         <key xsi:type="xsd:string">?</key>
+         <phrase xsi:type="xsd:string">?</phrase>
+      </urn:doSpellingSuggestion>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:GoogleSearch/GoogleSearchPort/doSpellingSuggestionRequest"/></con:call></con:operation></con:interface><con:mockService port="8088" path="/mockGoogleSearchBinding" name="GoogleSearchBindingMockService"><con:settings/><con:mockOperation name="doGetCachedPage" interface="GoogleSearchBinding" operation="doGetCachedPage"><con:settings/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:defaultResponse>Response 1</con:defaultResponse><con:response name="Response 1" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:GoogleSearch">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <urn:doGetCachedPageResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+         <return xsi:type="xsd:base64Binary">cid:109721102465</return>
+      </urn:doGetCachedPageResponse>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:GoogleSearch/GoogleSearchPort/doGetCachedPageResponse"/></con:response><con:dispatchConfig/></con:mockOperation><con:mockOperation name="doGoogleSearch" interface="GoogleSearchBinding" operation="doGoogleSearch"><con:settings/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:defaultResponse>Response 1</con:defaultResponse><con:response name="Response 1" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:GoogleSearch" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <urn:doGoogleSearchResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+         <return xsi:type="urn:GoogleSearchResult">
+            <!--You may enter the following 11 items in any order-->
+            <documentFiltering xsi:type="xsd:boolean">?</documentFiltering>
+            <searchComments xsi:type="xsd:string">?</searchComments>
+            <estimatedTotalResultsCount xsi:type="xsd:int">?</estimatedTotalResultsCount>
+            <estimateIsExact xsi:type="xsd:boolean">?</estimateIsExact>
+            <resultElements xsi:type="urn:ResultElementArray" soapenc:arrayType="urn:ResultElement[]"/>
+            <searchQuery xsi:type="xsd:string">?</searchQuery>
+            <startIndex xsi:type="xsd:int">?</startIndex>
+            <endIndex xsi:type="xsd:int">?</endIndex>
+            <searchTips xsi:type="xsd:string">?</searchTips>
+            <directoryCategories xsi:type="urn:DirectoryCategoryArray" soapenc:arrayType="urn:DirectoryCategory[]"/>
+            <searchTime xsi:type="xsd:double">?</searchTime>
+         </return>
+      </urn:doGoogleSearchResponse>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:GoogleSearch/GoogleSearchPort/doGoogleSearchResponse"/></con:response><con:dispatchConfig/></con:mockOperation><con:mockOperation name="doSpellingSuggestion" interface="GoogleSearchBinding" operation="doSpellingSuggestion"><con:settings/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:defaultResponse>Response 1</con:defaultResponse><con:response name="Response 1" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:GoogleSearch">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <urn:doSpellingSuggestionResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+         <return xsi:type="xsd:string">?</return>
+      </urn:doSpellingSuggestionResponse>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:GoogleSearch/GoogleSearchPort/doSpellingSuggestionResponse"/></con:response><con:dispatchConfig/></con:mockOperation><con:properties/></con:mockService><con:properties/><con:wssContainer/></con:soapui-project>
