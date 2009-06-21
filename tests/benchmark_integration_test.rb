@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 $LOAD_PATH.unshift File.expand_path(File.dirname(__FILE__) + "/../lib")
+require 'rubygems'
 require 'handsoap'
 require 'soap/wsdlDriver'
 require 'soap/header/simplehandler'
@@ -10,7 +11,7 @@ require 'benchmark'
 #   sh ~/path/to/soapui-2.5.1/bin/mockservicerunner.sh -p 8088 tests/GoogleSearch-soapui-project.xml
 #
 # Run the benchmark with (100 tries):
-#   ruby tests/benchmark_test.rb 100
+#   ruby tests/benchmark_integration_test.rb 100
 #
 
 # handsoap mappings:
@@ -58,15 +59,52 @@ if times < 1
   times = 1
 end
 puts "Benchmarking #{times} calls ..."
-Benchmark.bm(10) do |x|
-  x.report("handsoap") do
+Benchmark.bm(32) do |x|
+  x.report("soap4r") do
+    (1..times).each {
+      service_4.doSpellingSuggestion("foo", "bar")
+    }
+  end
+  Handsoap.http_driver = :curb
+  Handsoap.xml_query_driver = :nokogiri
+  x.report("handsoap+curb+nokogiri") do
     (1..times).each {
       service_h.do_spelling_suggestion("foo", "bar")
     }
   end
-  x.report("soap4r") do
+  Handsoap.http_driver = :curb
+  Handsoap.xml_query_driver = :libxml
+  x.report("handsoap+curb+libxml") do
     (1..times).each {
-      service_4.doSpellingSuggestion("foo", "bar")
+      service_h.do_spelling_suggestion("foo", "bar")
+    }
+  end
+  Handsoap.http_driver = :curb
+  Handsoap.xml_query_driver = :rexml
+  x.report("handsoap+curb+rexml") do
+    (1..times).each {
+      service_h.do_spelling_suggestion("foo", "bar")
+    }
+  end
+  Handsoap.http_driver = :httpclient
+  Handsoap.xml_query_driver = :nokogiri
+  x.report("handsoap+httpclient+nokogiri") do
+    (1..times).each {
+      service_h.do_spelling_suggestion("foo", "bar")
+    }
+  end
+  Handsoap.http_driver = :httpclient
+  Handsoap.xml_query_driver = :libxml
+  x.report("handsoap+httpclient+libxml") do
+    (1..times).each {
+      service_h.do_spelling_suggestion("foo", "bar")
+    }
+  end
+  Handsoap.http_driver = :httpclient
+  Handsoap.xml_query_driver = :rexml
+  x.report("handsoap+httpclient+rexml") do
+    (1..times).each {
+      service_h.do_spelling_suggestion("foo", "bar")
     }
   end
 end
