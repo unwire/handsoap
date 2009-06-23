@@ -23,7 +23,7 @@ xmlns:aws="http://ast.amazonaws.com/doc/2006-05-15/">
     </aws:OperationRequest>
     <aws:ThumbnailResult>
      <aws:Thumbnail
-Exists="true" attr-test="bl&#x00e5;b&#x00E6;rgr&#x00F8;d">http://location_to_thumbnail_for_www.alexa.com</aws:Thumbnail>
+Exists="true" attr-test="bl&#x00e5;b&#x00E6;rgr&#x00F8;d" foo="foobar">http://location_to_thumbnail_for_www.alexa.com</aws:Thumbnail>
      <aws:RequestUrl>www.alexa.com</aws:RequestUrl>
     </aws:ThumbnailResult>
     <m:ResponseStatus>
@@ -154,6 +154,18 @@ Exists="true">http://location_to_thumbnail_for_www.a9.com</aws:Thumbnail>
     doc = create_default_document
     assert_equal 3, (doc/"//aws:OperationRequest[1]/aws:RequestId").to_i
     assert_equal (doc/"//aws:OperationRequest[1]/aws:RequestId").to_i, (doc/"//aws:OperationRequest[1]/aws:RequestId").first.to_i
+  end
+  def test_attribute_hash_access
+    doc = create_default_document
+    node = doc.xpath("//aws:Thumbnail").first
+    assert_equal "bl\303\245b\303\246rgr\303\270d", node['attr-test']
+  end
+  def test_attribute_hash_access_fails_with_a_symbol
+    doc = create_default_document
+    node = doc.xpath("//aws:Thumbnail").first
+    assert_raise ArgumentError do
+      assert_equal "foobar", node[:foo]
+    end
   end
 end
 

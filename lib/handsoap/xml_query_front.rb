@@ -176,6 +176,14 @@ module Handsoap
       def /(expression)
         NodeSelection.new self.xpath(expression)
       end
+      # Returns the attribute value of the underlying element.
+      #
+      # Shortcut for:
+      #
+      #     (node/"@attribute_name").to_s
+      def [](attribute_name)
+        raise NotImplementedError.new
+      end
     end
 
     # Driver for +libxml+.
@@ -191,6 +199,10 @@ module Handsoap
         ns = @namespaces.merge(ns)
         assert_prefixes!(expression, ns)
         @element.find(expression, ns.map{|k,v| "#{k}:#{v}" }).to_a.map{|node| LibXMLDriver.new(node, ns) }
+      end
+      def [](attribute_name)
+        raise ArgumentError.new unless attribute_name.kind_of? String
+        @element[attribute_name]
       end
       def to_xml
         @element.to_s
@@ -217,6 +229,10 @@ module Handsoap
         ns = @namespaces.merge(ns)
         assert_prefixes!(expression, ns)
         REXML::XPath.match(@element, expression, ns).map{|node| REXMLDriver.new(node, ns) }
+      end
+      def [](attribute_name)
+        raise ArgumentError.new unless attribute_name.kind_of? String
+        @element.attributes[attribute_name]
       end
       def to_xml
         require 'rexml/formatters/pretty'
@@ -254,6 +270,10 @@ module Handsoap
         ns = @namespaces.merge(ns)
         assert_prefixes!(expression, ns)
         @element.xpath(expression, ns).map{|node| NokogiriDriver.new(node, ns) }
+      end
+      def [](attribute_name)
+        raise ArgumentError.new unless attribute_name.kind_of? String
+        @element[attribute_name]
       end
       def to_xml
         @element.serialize(NokogiriDriver.serialize_args)
