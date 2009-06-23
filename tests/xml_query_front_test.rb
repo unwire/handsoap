@@ -150,6 +150,11 @@ Exists="true">http://location_to_thumbnail_for_www.a9.com</aws:Thumbnail>
   )?</bar>
 </foo>")
   end
+  def test_query_by_syntactic_sugar
+    doc = create_default_document
+    assert_equal 3, (doc/"//aws:OperationRequest[1]/aws:RequestId").to_i
+    assert_equal (doc/"//aws:OperationRequest[1]/aws:RequestId").to_i, (doc/"//aws:OperationRequest[1]/aws:RequestId").first.to_i
+  end
 end
 
 class TestOfREXMLDriver < Test::Unit::TestCase

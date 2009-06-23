@@ -62,6 +62,36 @@ module Handsoap
       end
     end
 
+    # NodeSelection is a wrapper around Array, that implicitly delegates BaseDriver methods to the first element.
+    #
+    # It makes mapping code prettier, since you often need to access the first element of a selection.
+    class NodeSelection < Array
+      def to_i
+        self.first.to_i if self.any?
+      end
+      def to_f
+        self.first.to_f if self.any?
+      end
+      def to_boolean
+        self.first.to_boolean if self.any?
+      end
+      def to_date
+        self.first.to_date if self.any?
+      end
+      def node_name
+        self.first.node_name if self.any?
+      end
+      def xpath(expression, ns = nil)
+        self.first.xpath(expression, ns)
+      end
+      def to_s
+        self.first.to_s if self.any?
+      end
+      def to_xml
+        self.first.to_xml if self.any?
+      end
+    end
+
     # Wraps the underlying (native) xml driver, and provides a uniform interface.
     module BaseDriver
       def initialize(element, namespaces = {})
@@ -142,9 +172,9 @@ module Handsoap
       def to_xml
         raise NotImplementedError.new
       end
-      # Alias for +xpath+
+      # Calls +xpath+ and wraps the result in a +NodeSelection+.
       def /(expression)
-        self.xpath(expression)
+        NodeSelection.new self.xpath(expression)
       end
     end
 
