@@ -104,28 +104,8 @@ module Handsoap
     def self.request_content_type
       @protocol_version == 1 ? "text/xml" : "application/soap+xml"
     end
-    def self.map_method(mapping)
-      if @mapping.nil?
-        @mapping = {}
-      end
-      @mapping.merge! mapping
-    end
-    # Registers a block to call when a request document is created.
-    #
-    # The is deprecated, in favour of #on_create_document
-    def self.on_create_document(&block)
-      @create_document_callback = block
-    end
-    def self.fire_on_create_document(doc)
-      if @create_document_callback
-        @create_document_callback.call doc
-      end
-    end
     def self.uri
       @uri
-    end
-    def self.get_mapping(name)
-      @mapping[name] if @mapping
     end
     @@instance = {}
     def self.instance
@@ -134,14 +114,6 @@ module Handsoap
     def self.method_missing(method, *args)
       if instance.respond_to?(method)
         instance.__send__ method, *args
-      else
-        super
-      end
-    end
-    def method_missing(method, *args)
-      action = self.class.get_mapping(method)
-      if action
-        invoke(action, *args)
       else
         super
       end
@@ -208,50 +180,6 @@ module Handsoap
     # Default behaviour is to raise an error
     def on_missing_document(soap_response)
       raise "The response is not a valid SOAP envelope"
-    end
-    private
-    # Helper to serialize a node into a ruby string
-    #
-    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_s
-    def xml_to_str(node, xquery = nil)
-      n = xquery ? node.xpath(xquery, ns).first : node
-      return if n.nil?
-      n.to_s
-    end
-    alias_method :xml_to_s, :xml_to_str
-    # Helper to serialize a node into a ruby integer
-    #
-    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_i
-    def xml_to_int(node, xquery = nil)
-      n = xquery ? node.xpath(xquery, ns).first : node
-      return if n.nil?
-      n.to_s.to_i
-    end
-    alias_method :xml_to_i, :xml_to_int
-    # Helper to serialize a node into a ruby float
-    #
-    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_f
-    def xml_to_float(node, xquery = nil)
-      n = xquery ? node.xpath(xquery, ns).first : node
-      return if n.nil?
-      n.to_s.to_f
-    end
-    alias_method :xml_to_f, :xml_to_float
-    # Helper to serialize a node into a ruby boolean
-    #
-    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_boolean
-    def xml_to_bool(node, xquery = nil)
-      n = xquery ? node.xpath(xquery, ns).first : node
-      return if n.nil?
-      n.to_s == "true"
-    end
-    # Helper to serialize a node into a ruby Time object
-    #
-    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_date
-    def xml_to_date(node, xquery = nil)
-      n = xquery ? node.xpath(xquery, ns).first : node
-      return if n.nil?
-      Time.iso8601(n.to_s)
     end
     def debug(message = nil) #:nodoc:
       if @@logger
@@ -345,4 +273,85 @@ module Handsoap
     return xml_string
   end
 
+end
+
+# Legacy/CS code here. This shouldn't be used in new applications.
+module Handsoap
+  class Service
+    # Registers a simple method mapping without any arguments and no parsing of response.
+    #
+    # This is deprecated
+    def self.map_method(mapping)
+      if @mapping.nil?
+        @mapping = {}
+      end
+      @mapping.merge! mapping
+    end
+    def self.get_mapping(name)
+      @mapping[name] if @mapping
+    end
+    def method_missing(method, *args)
+      action = self.class.get_mapping(method)
+      if action
+        invoke(action, *args)
+      else
+        super
+      end
+    end
+    # Registers a block to call when a request document is created.
+    #
+    # This is deprecated, in favour of #on_create_document
+    def self.on_create_document(&block)
+      @create_document_callback = block
+    end
+    def self.fire_on_create_document(doc)
+      if @create_document_callback
+        @create_document_callback.call doc
+      end
+    end
+    private
+    # Helper to serialize a node into a ruby string
+    #
+    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_s
+    def xml_to_str(node, xquery = nil)
+      n = xquery ? node.xpath(xquery, ns).first : node
+      return if n.nil?
+      n.to_s
+    end
+    alias_method :xml_to_s, :xml_to_str
+    # Helper to serialize a node into a ruby integer
+    #
+    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_i
+    def xml_to_int(node, xquery = nil)
+      n = xquery ? node.xpath(xquery, ns).first : node
+      return if n.nil?
+      n.to_s.to_i
+    end
+    alias_method :xml_to_i, :xml_to_int
+    # Helper to serialize a node into a ruby float
+    #
+    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_f
+    def xml_to_float(node, xquery = nil)
+      n = xquery ? node.xpath(xquery, ns).first : node
+      return if n.nil?
+      n.to_s.to_f
+    end
+    alias_method :xml_to_f, :xml_to_float
+    # Helper to serialize a node into a ruby boolean
+    #
+    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_boolean
+    def xml_to_bool(node, xquery = nil)
+      n = xquery ? node.xpath(xquery, ns).first : node
+      return if n.nil?
+      n.to_s == "true"
+    end
+    # Helper to serialize a node into a ruby Time object
+    #
+    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_date
+    def xml_to_date(node, xquery = nil)
+      n = xquery ? node.xpath(xquery, ns).first : node
+      return if n.nil?
+      Time.iso8601(n.to_s)
+    end
+  end
 end
