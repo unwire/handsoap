@@ -110,6 +110,9 @@ module Handsoap
       end
       @mapping.merge! mapping
     end
+    # Registers a block to call when a request document is created.
+    #
+    # The is deprecated, in favour of #on_create_document
     def self.on_create_document(&block)
       @create_document_callback = block
     end
@@ -173,16 +176,38 @@ module Handsoap
         dispatch(doc, options[:soap_action])
       end
     end
+    # Hook that is called when a new request document is created.
+    #
+    # You can override this to add namespaces and other elements that are common to all requests (Such as authentication).
+    def on_create_document(doc)
+    end
     # Hook that is called before the message is dispatched.
     #
     # You can override this to provide filtering and logging.
     def on_before_dispatch
+    end
+    # Hook that is called when there is a response.
+    #
+    # You can override this to register common namespaces, useful for parsing the document.
+    def on_response_document(doc)
+    end
+    # Hook that is called if there is a HTTP level error.
+    #
+    # Default behaviour is to raise an error.
+    def on_http_error(status, content)
+      raise "HTTP error #{status}"
     end
     # Hook that is called if the dispatch returns a +Fault+.
     #
     # Default behaviour is to raise the Fault, but you can override this to provide logging and more fine-grained handling faults.
     def on_fault(fault)
       raise fault
+    end
+    # Hook that is called if the response does not contain a valid SOAP enevlope.
+    #
+    # Default behaviour is to raise an error
+    def on_missing_document(soap_response)
+      raise "The response is not a valid SOAP envelope"
     end
     private
     # Helper to serialize a node into a ruby string
@@ -191,7 +216,7 @@ module Handsoap
     def xml_to_str(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
-      n.to_utf8
+      n.to_s
     end
     alias_method :xml_to_s, :xml_to_str
     # Helper to serialize a node into a ruby integer
@@ -238,7 +263,21 @@ module Handsoap
         end
       end
     end
-    # Takes care of the HTTP level dispatch.
+    # Does the actual HTTP level interaction.
+    def send_http_request(uri, post_body, headers)
+      if Handsoap.http_driver == :curb
+        http_client = Curl::Easy.new(uri)
+        http_client.headers = headers
+        http_client.http_post post_body
+        return { :status => http_client.response_code, :body => http_client.body_str, :content_type => response.contenttype }
+      elsif Handsoap.http_driver == :httpclient
+        response = HTTPClient.new.post(uri, post_body, headers)
+        return { :status => response.status, :body => response.content, :content_type => response.content_type }
+      else
+        raise "Unknown http driver #{Handsoap.http_driver}"
+      end
+    end
+    # Send document and parses the response into a +Response+
     def dispatch(doc, action)
       on_before_dispatch
       headers = {
@@ -254,34 +293,25 @@ module Handsoap
         logger.puts "---"
         logger.puts body
       end
-      if Handsoap.http_driver == :curb
-        http_client = Curl::Easy.new(self.class.uri)
-        http_client.headers = headers
-        http_client.http_post body
-        debug do |logger|
-          logger.puts "--- Response ---"
-          logger.puts "HTTP Status: %s" % [http_client.response_code]
-          logger.puts "Content-Type: %s" % [http_client.content_type]
-          logger.puts "---"
-          logger.puts Handsoap.pretty_format_envelope(http_client.body_str)
-        end
-        soap_response = Response.new(http_client.body_str, self.class.envelope_namespace)
-      elsif Handsoap.http_driver == :httpclient
-        response = HTTPClient.new.post(self.class.uri, body, headers)
-        debug do |logger|
-          logger.puts "--- Response ---"
-          logger.puts "HTTP Status: %s" % [response.status]
-          logger.puts "Content-Type: %s" % [response.contenttype]
-          logger.puts "---"
-          logger.puts Handsoap.pretty_format_envelope(response.content)
-        end
-        soap_response = Response.new(response.content, self.class.envelope_namespace)
-      else
-        raise "Unknown http driver #{Handsoap.http_driver}"
+      response = send_http_request(self.class.uri, body, headers)
+      debug do |logger|
+        logger.puts "--- Response ---"
+        logger.puts "HTTP Status: %s" % [response[:status]]
+        logger.puts "Content-Type: %s" % [response[:content_type]]
+        logger.puts "---"
+        logger.puts Handsoap.pretty_format_envelope(response[:body])
       end
+      if response[:status] >= 300
+        return on_http_error(response[:status], response[:body])
+      end
+      soap_response = Response.new(response[:body], self.class.envelope_namespace)
       if soap_response.fault?
-        return self.on_fault(soap_response.fault)
+        return on_fault(soap_response.fault)
       end
+      unless soap_response.document?
+        return on_missing_document(soap_response)
+      end
+      on_response_document(soap_response.document)
       return soap_response
     end
     # Creates a standard SOAP envelope and yields the +Body+ element.
@@ -293,7 +323,8 @@ module Handsoap
           env.add "*:Body"
         end
       end
-      self.class.fire_on_create_document doc
+      self.class.fire_on_create_document doc # deprecated .. use instance method
+      on_create_document(doc)
       if block_given?
         yield doc.find("Body")
       end
