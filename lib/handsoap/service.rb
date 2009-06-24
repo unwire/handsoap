@@ -197,10 +197,10 @@ module Handsoap
         http_client = Curl::Easy.new(uri)
         http_client.headers = headers
         http_client.http_post post_body
-        return { :status => http_client.response_code, :body => http_client.body_str, :content_type => response.contenttype }
+        return { :status => http_client.response_code, :body => http_client.body_str, :content_type => http_client.content_type }
       elsif Handsoap.http_driver == :httpclient
         response = HTTPClient.new.post(uri, post_body, headers)
-        return { :status => response.status, :body => response.content, :content_type => response.content_type }
+        return { :status => response.status, :body => response.content, :content_type => response.contenttype }
       else
         raise "Unknown http driver #{Handsoap.http_driver}"
       end
