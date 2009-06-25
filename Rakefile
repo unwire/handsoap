@@ -41,3 +41,6 @@ end
 
 desc "Run tests and clean up afterwards"
 task :test => ["test:cleanup", "test:test", "test:cleanup"]
+
+task :default => [:test]
+
