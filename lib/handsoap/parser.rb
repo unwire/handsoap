@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'rubygems'
-require 'open-uri'
-require 'uri'
+require 'httpclient'
+require 'openssl'
 require 'nokogiri'
 
 module Handsoap
@@ -73,7 +73,15 @@ module Handsoap
       end
 
       def self.read(url)
-        self.new(Nokogiri.XML(Kernel.open(url).read), url)
+        if url =~ /^http(s?):/
+          request = ::HTTPClient.new
+          request.ssl_config.verify_mode = ::OpenSSL::SSL::VERIFY_NONE
+          response = request.get(url)
+          xml_src = response.content
+        else
+          xml_src = Kernel.open(url).read
+        end
+        self.new(Nokogiri.XML(xml_src), url)
       end
 
       def ns
