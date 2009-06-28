@@ -75,10 +75,10 @@ module Handsoap #:nodoc:
         def file_contents(relative_destination, &block)
           destination = destination_path(relative_destination)
           temp_file = Tempfile.new("handsoap_generator")
-          if RUBY_PLATFORM =~ /win32/
-            canonical_path = File.expand_path(source_path("/."))
-          else
+          if RUBY_PLATFORM =~ /linux/
             canonical_path = `readlink -fn '#{source_path("/.")}'`
+          else
+            canonical_path = File.expand_path(source_path("/."))
           end
           temp_file_relative_path = relative_path(temp_file.path, canonical_path)
           begin
