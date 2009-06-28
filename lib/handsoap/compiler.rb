@@ -123,8 +123,14 @@ module Handsoap
         w.puts
         w.begin "class #{service_name} < Handsoap::Service"
         w.puts "endpoint #{endpoint_name}"
-        w.begin "on_create_document do |doc|"
+        w.begin "def on_create_document(doc)"
+        w.puts "# register namespaces for the request"
         w.puts "doc.alias 'tns', '#{@wsdl.target_ns}'"
+        w.end
+        w.puts
+        w.begin "def on_response_document(doc)"
+        w.puts "# register namespaces for the response"
+        w.puts "doc.add_namespace 'ns', '#{@wsdl.target_ns}'"
         w.end
         w.puts
         w.puts "# public methods"
