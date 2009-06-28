@@ -142,13 +142,18 @@ Exists="true">http://location_to_thumbnail_for_www.a9.com</aws:Thumbnail>
       doc = Handsoap::XmlQueryFront.parse_string("<?xml version='1.0' ?>", driver)
     end
   end
-  def test_serialize
+  def test_serialize_pretty
     doc = Handsoap::XmlQueryFront.parse_string('<?xml version="1.0" encoding="UTF-8"?><foo><bar>blah</bar></foo>', driver)
-    assert doc.to_xml.match("<foo>
-  <bar>(
-    )?blah(
-  )?</bar>
-</foo>")
+    assert_equal "<foo>\n  <bar>blah</bar>\n</foo>", doc.xpath("//foo").to_xml
+  end
+  def test_serialize_raw
+    str = "<foo>\n\t\t<bar>blah\n</bar>\n</foo>"
+    doc = Handsoap::XmlQueryFront.parse_string("<?xml version='1.0' encoding='UTF-8'?>" + str, driver)
+    assert_equal str, doc.xpath("//foo").to_raw
+  end
+  def test_an_unformatted_string_can_be_serialized_raw
+    doc = Handsoap::XmlQueryFront.parse_string('<?xml version="1.0" encoding="UTF-8"?><foo><bar>blah</bar></foo>', driver)
+    assert_equal "<foo><bar>blah</bar></foo>", doc.xpath("//foo").to_raw
   end
   def test_query_by_syntactic_sugar
     doc = create_default_document
