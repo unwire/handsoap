@@ -229,12 +229,12 @@ module Handsoap
         logger.puts "---"
         logger.puts Handsoap.pretty_format_envelope(response[:body])
       end
-      if response[:status] >= 300
-        return on_http_error(response[:status], response[:body])
-      end
       soap_response = Response.new(response[:body], self.class.envelope_namespace)
       if soap_response.fault?
         return on_fault(soap_response.fault)
+      end
+      if response[:status] >= 300
+        return on_http_error(response[:status], response[:body])
       end
       unless soap_response.document?
         return on_missing_document(soap_response)
