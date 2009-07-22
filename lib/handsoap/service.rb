@@ -139,6 +139,11 @@ module Handsoap
     # You can override this to provide filtering and logging.
     def on_before_dispatch
     end
+    # Hook that is called after the http_client is created.
+    #
+    # You can override this to customize the http_client
+    def on_after_create_http_client(http_client)
+    end
     # Hook that is called when there is a response.
     #
     # You can override this to register common namespaces, useful for parsing the document.
@@ -181,11 +186,14 @@ module Handsoap
     def send_http_request(uri, post_body, headers)
       if Handsoap.http_driver == :curb
         http_client = Curl::Easy.new(uri)
+        on_after_create_http_client(http_client)
         http_client.headers = headers
         http_client.http_post post_body
         return { :status => http_client.response_code, :body => http_client.body_str, :content_type => http_client.content_type }
       elsif Handsoap.http_driver == :httpclient
-        response = HTTPClient.new.post(uri, post_body, headers)
+        http_client = HTTPClient.new
+        on_after_create_http_client(http_client)
+        response = http_client.post(uri, post_body, headers)
         return { :status => response.status, :body => response.content, :content_type => response.contenttype }
       else
         raise "Unknown http driver #{Handsoap.http_driver}"
