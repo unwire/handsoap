@@ -28,6 +28,9 @@ module Handsoap
         require 'rexml/document'
       elsif driver == :nokogiri
         require 'nokogiri'
+        if Gem.loaded_specs['nokogiri'].version < Gem::Version.new('1.3.0')
+          raise "Incompatible version of Nokogiri. Please upgrade gem."
+        end
       elsif driver == :libxml
         require 'libxml'
       else
@@ -78,17 +81,20 @@ module Handsoap
       def to_date
         self.first.to_date if self.any?
       end
+      def to_s
+        self.first.to_s if self.any?
+      end
       def node_name
         self.first.node_name if self.any?
       end
       def xpath(expression, ns = nil)
         self.first.xpath(expression, ns)
       end
-      def to_s
-        self.first.to_s if self.any?
-      end
       def to_xml
         self.first.to_xml if self.any?
+      end
+      def to_raw
+        self.first.to_raw if self.any?
       end
     end
 
@@ -142,6 +148,12 @@ module Handsoap
         return if t.nil?
         Time.iso8601(t)
       end
+      # Returns the inner text content of this element, or the value (if it's an attr or textnode).
+      #
+      # The output is a UTF-8 encoded string, without xml-entities.
+      def to_s
+        raise NotImplementedError.new
+      end
       # Returns the underlying native element.
       #
       # You shouldn't need to use this, since doing so would void portability.
@@ -156,25 +168,23 @@ module Handsoap
       #
       # +ns+ Should be a Hash of prefix => namespace
       #
-      # Returns an Array of wrapped elements.
+      # Returns a +NodeSelection+
       #
       # See add_namespace
       def xpath(expression, ns = nil)
-        raise NotImplementedError.new
-      end
-      # Returns the inner text content of this element, or the value (if it's an attr or textnode).
-      #
-      # The output is a UTF-8 encoded string, without xml-entities.
-      def to_s
         raise NotImplementedError.new
       end
       # Returns the outer XML for this element.
       def to_xml
         raise NotImplementedError.new
       end
-      # Calls +xpath+ and wraps the result in a +NodeSelection+.
+      # Returns the outer XML for this element, preserving the original formatting.
+      def to_raw
+        raise NotImplementedError.new
+      end
+      # alias of +xpath+
       def /(expression)
-        NodeSelection.new self.xpath(expression)
+        self.xpath(expression)
       end
       # Returns the attribute value of the underlying element.
       #
@@ -198,14 +208,17 @@ module Handsoap
         ns = {} if ns.nil?
         ns = @namespaces.merge(ns)
         assert_prefixes!(expression, ns)
-        @element.find(expression, ns.map{|k,v| "#{k}:#{v}" }).to_a.map{|node| LibXMLDriver.new(node, ns) }
+        NodeSelection.new(@element.find(expression, ns.map{|k,v| "#{k}:#{v}" }).to_a.map{|node| LibXMLDriver.new(node, ns) })
       end
       def [](attribute_name)
         raise ArgumentError.new unless attribute_name.kind_of? String
         @element[attribute_name]
       end
       def to_xml
-        @element.to_s
+        @element.to_s(:indent => true)
+      end
+      def to_raw
+        @element.to_s(:indent => false)
       end
       def to_s
         if @element.kind_of? LibXML::XML::Attr
@@ -228,7 +241,7 @@ module Handsoap
         ns = {} if ns.nil?
         ns = @namespaces.merge(ns)
         assert_prefixes!(expression, ns)
-        REXML::XPath.match(@element, expression, ns).map{|node| REXMLDriver.new(node, ns) }
+        NodeSelection.new(REXML::XPath.match(@element, expression, ns).map{|node| REXMLDriver.new(node, ns) })
       end
       def [](attribute_name)
         raise ArgumentError.new unless attribute_name.kind_of? String
@@ -239,7 +252,11 @@ module Handsoap
         formatter = REXML::Formatters::Pretty.new
         out = String.new
         formatter.write(@element, out)
-        out
+        # patch for REXML's broken formatting
+        out.gsub(/>\n\s+([^<]+)\n\s+<\//, ">\\1</")
+      end
+      def to_raw
+        @element.to_s
       end
       def to_s
         if @element.kind_of? REXML::Attribute
@@ -258,25 +275,21 @@ module Handsoap
       def node_name
         @element.name
       end
-      def self.serialize_args #:nodoc:
-        @serialize_args ||= if Gem.loaded_specs['nokogiri'].version >= Gem::Version.new('1.3.0')
-                              { :encoding => 'UTF-8' }
-                            else
-                              'UTF-8'
-                            end
-      end
       def xpath(expression, ns = nil)
         ns = {} if ns.nil?
         ns = @namespaces.merge(ns)
         assert_prefixes!(expression, ns)
-        @element.xpath(expression, ns).map{|node| NokogiriDriver.new(node, ns) }
+        NodeSelection.new(@element.xpath(expression, ns).map{|node| NokogiriDriver.new(node, ns) })
       end
       def [](attribute_name)
         raise ArgumentError.new unless attribute_name.kind_of? String
         @element[attribute_name]
       end
       def to_xml
-        @element.serialize(NokogiriDriver.serialize_args)
+        @element.serialize(:encoding => 'UTF-8')
+      end
+      def to_raw
+        @element.serialize(:encoding => 'UTF-8', :save_with => Nokogiri::XML::Node::SaveOptions::AS_XML)
       end
       def to_s
         if @element.kind_of?(Nokogiri::XML::Text) || @element.kind_of?(Nokogiri::XML::CDATA)
@@ -289,9 +302,9 @@ module Handsoap
         return if element.nil?
         # This looks messy because it is .. Nokogiri's interface is in a flux
         if element.kind_of?(Nokogiri::XML::CDATA)
-          element.serialize(NokogiriDriver.serialize_args).gsub(/^<!\[CDATA\[/, "").gsub(/\]\]>$/, "")
+          element.serialize(:encoding => 'UTF-8').gsub(/^<!\[CDATA\[/, "").gsub(/\]\]>$/, "")
         else
-          element.serialize(NokogiriDriver.serialize_args).gsub('&lt;', '<').gsub('&gt;', '>').gsub('&quot;', '"').gsub('&apos;', "'").gsub('&amp;', '&')
+          element.serialize(:encoding => 'UTF-8').gsub('&lt;', '<').gsub('&gt;', '>').gsub('&quot;', '"').gsub('&apos;', "'").gsub('&amp;', '&')
         end
       end
     end
