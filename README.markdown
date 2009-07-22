@@ -133,6 +133,10 @@ If you use Rails, you will need to load the gem from the `config/environment.rb`
 
     config.gem 'troelskn-handsoap', :lib => 'handsoap', :source => "http://gems.github.com"
 
+If you use the standard development environment of Rails, you may run into troubles with cached classes. Add the following line to the initializer:
+
+    ActiveSupport::Dependencies.explicitly_unloadable_constants << 'Handsoap::Service'
+
 ###Generator
 
 From version 0.2.0 Handsoap sports a generator, that creates the service class + an integration test case. This is just a rough starting point for your service - You still have to fill out the actual mappings to/from xml, but at least it saves your some copy-pasting from this guide.
