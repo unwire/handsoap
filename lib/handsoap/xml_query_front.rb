@@ -90,6 +90,9 @@ module Handsoap
       def xpath(expression, ns = nil)
         self.first.xpath(expression, ns)
       end
+      def /(expression)
+        self.first.xpath(expression)
+      end
       def to_xml
         self.first.to_xml if self.any?
       end

@@ -107,6 +107,11 @@ Exists="true">http://location_to_thumbnail_for_www.a9.com</aws:Thumbnail>
     doc = create_default_document
     assert_equal "3f8ceabd-2d15-47f0-b35e-d52ee868a4a6", doc.xpath("//foo:OperationRequest").first.xpath("aws:RequestId").first.to_s
   end
+	def test_resultset_delegates_slash
+    doc = create_default_document
+    operation_request = (doc/"//foo:OperationRequest")
+    assert_equal "3f8ceabd-2d15-47f0-b35e-d52ee868a4a6", (operation_request/"aws:RequestId").to_s
+  end
   def test_attribute_can_cast_to_boolean
     doc = create_default_document
     assert_kind_of TrueClass, doc.xpath("//aws:Thumbnail/@Exists").first.to_boolean
