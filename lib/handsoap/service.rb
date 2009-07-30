@@ -24,7 +24,7 @@ module Handsoap
     @xml_query_driver = Handsoap::XmlQueryFront.load_driver!(driver)
   end
 
-  SOAP_NAMESPACE = { 1 => 'http://schemas.xmlsoap.org/soap/envelope/', 2 => 'http://www.w3.org/2001/12/soap-encoding' }
+  SOAP_NAMESPACE = { 1 => 'http://schemas.xmlsoap.org/soap/envelope/', 2 => 'http://www.w3.org/2003/05/soap-envelope' }
 
   class Response
     def initialize(http_body, soap_namespace)
