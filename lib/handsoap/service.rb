@@ -161,6 +161,9 @@ module Handsoap
     # Hook that is called if the response does not contain a valid SOAP enevlope.
     #
     # Default behaviour is to raise an error
+    #
+    # Note that if your service has operations that are one-way, you shouldn't raise an error here.
+    # This is however a fairly exotic case, so that is why the default behaviour is to raise an error.
     def on_missing_document(http_response_body)
       raise "The response is not a valid SOAP envelope"
     end
