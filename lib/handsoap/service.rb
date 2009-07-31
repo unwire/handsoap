@@ -91,18 +91,32 @@ module Handsoap
     def self.logger=(io)
       @@logger = io
     end
+		# Sets the endpoint for the service.
+		# Arguments:
+		#   :uri                  => endpoint uri of the service. Required.
+		#   :version              => 1 | 2
+		#   :envelope_namespace    => Namespace of SOAP-envelope
+		#   :request_content_type => Content-Type of HTTP request.
+		# You must supply either :version or both :envelope_namspace and :request_content_type.
+		# :version is simply a shortcut for default values.
     def self.endpoint(args = {})
-      @protocol_version = args[:version] || raise("Missing option :version")
       @uri = args[:uri] || raise("Missing option :uri")
+			if args[:version]
+				raise("Unknown protocol version '#{@protocol_version.inspect}'") if SOAP_NAMESPACE[args[:version]].nil?
+				@envelope_namespace = SOAP_NAMESPACE[args[:version]]
+				@request_content_type = args[:version] == 1 ? "text/xml" : "application/soap+xml"
+			end
+			@envelope_namespace = args[:envelope_namespace] unless args[:envelope_namespace].nil?
+			@request_content_type = args[:request_content_type] unless args[:request_content_type].nil?
+			if @envelope_namespace.nil? || @request_content_type.nil?
+				raise("Missing option :envelope_namespace, :request_content_type or :version")
+			end
     end
     def self.envelope_namespace
-      if SOAP_NAMESPACE[@protocol_version].nil?
-        raise "Unknown protocol version '#{@protocol_version.inspect}'"
-      end
-      SOAP_NAMESPACE[@protocol_version]
+			@envelope_namespace
     end
     def self.request_content_type
-      @protocol_version == 1 ? "text/xml" : "application/soap+xml"
+      @request_content_type
     end
     def self.uri
       @uri
