@@ -188,7 +188,7 @@ module Handsoap
         raise "Unknown http driver #{Handsoap.http_driver}"
       end
     end
-    # Send document and parses the response into a +XmlQueryFront::BaseDriver+ (XmlDocument)
+    # Send document and parses the response into a +XmlQueryFront::XmlElement+ (XmlDocument)
     def dispatch(doc, action)
       on_before_dispatch
       headers = {
@@ -321,7 +321,7 @@ module Handsoap
     private
     # Helper to serialize a node into a ruby string
     #
-    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_s
+    # *deprecated*. Use Handsoap::XmlQueryFront::XmlElement#to_s
     def xml_to_str(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
@@ -330,7 +330,7 @@ module Handsoap
     alias_method :xml_to_s, :xml_to_str
     # Helper to serialize a node into a ruby integer
     #
-    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_i
+    # *deprecated*. Use Handsoap::XmlQueryFront::XmlElement#to_i
     def xml_to_int(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
@@ -339,7 +339,7 @@ module Handsoap
     alias_method :xml_to_i, :xml_to_int
     # Helper to serialize a node into a ruby float
     #
-    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_f
+    # *deprecated*. Use Handsoap::XmlQueryFront::XmlElement#to_f
     def xml_to_float(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
@@ -348,7 +348,7 @@ module Handsoap
     alias_method :xml_to_f, :xml_to_float
     # Helper to serialize a node into a ruby boolean
     #
-    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_boolean
+    # *deprecated*. Use Handsoap::XmlQueryFront::XmlElement#to_boolean
     def xml_to_bool(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?
@@ -356,7 +356,7 @@ module Handsoap
     end
     # Helper to serialize a node into a ruby Time object
     #
-    # *deprecated*. Use Handsoap::XmlQueryFront::BaseDriver#to_date
+    # *deprecated*. Use Handsoap::XmlQueryFront::XmlElement#to_date
     def xml_to_date(node, xquery = nil)
       n = xquery ? node.xpath(xquery, ns).first : node
       return if n.nil?

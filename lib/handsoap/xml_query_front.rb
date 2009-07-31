@@ -13,7 +13,7 @@ module Handsoap
   #   :nokogiri
   #   :libxml
   #
-  # The resulting object is a wrapper, of the type Handsoap::XmlQueryFront::BaseDriver.
+  # The resulting object is a wrapper, of the type Handsoap::XmlQueryFront::XmlElement.
   #
   module XmlQueryFront
 
@@ -65,7 +65,7 @@ module Handsoap
       end
     end
 
-    # NodeSelection is a wrapper around Array, that implicitly delegates BaseDriver methods to the first element.
+    # NodeSelection is a wrapper around Array, that implicitly delegates XmlElement methods to the first element.
     #
     # It makes mapping code prettier, since you often need to access the first element of a selection.
     class NodeSelection < Array
@@ -102,7 +102,7 @@ module Handsoap
     end
 
     # Wraps the underlying (native) xml driver, and provides a uniform interface.
-    module BaseDriver
+    module XmlElement
       def initialize(element, namespaces = {})
         @element = element
         @namespaces = namespaces
@@ -203,7 +203,7 @@ module Handsoap
     #
     # http://libxml.rubyforge.org/
     class LibXMLDriver
-      include BaseDriver
+      include XmlElement
       def node_name
         @element.name
       end
@@ -236,7 +236,7 @@ module Handsoap
     #
     # http://www.germane-software.com/software/rexml/
     class REXMLDriver
-      include BaseDriver
+      include XmlElement
       def node_name
         @element.name
       end
@@ -274,7 +274,7 @@ module Handsoap
     #
     # http://nokogiri.rubyforge.org/nokogiri/
     class NokogiriDriver
-      include BaseDriver
+      include XmlElement
       def node_name
         @element.name
       end
