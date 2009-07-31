@@ -24,40 +24,6 @@ module Handsoap
     @xml_query_driver = Handsoap::XmlQueryFront.load_driver!(driver)
   end
 
-  SOAP_NAMESPACE = { 1 => 'http://schemas.xmlsoap.org/soap/envelope/', 2 => 'http://www.w3.org/2003/05/soap-envelope' }
-
-  class Response
-    def initialize(http_body, soap_namespace)
-      @http_body = http_body
-      @soap_namespace = soap_namespace
-      @document = :lazy
-      @fault = :lazy
-    end
-    def document?
-      !! document
-    end
-    def document
-      if @document == :lazy
-        begin
-          @document = Handsoap::XmlQueryFront.parse_string(@http_body, Handsoap.xml_query_driver)
-        rescue Handsoap::XmlQueryFront::ParseError => ex
-          @document = nil
-        end
-      end
-      return @document
-    end
-    def fault?
-      !! fault
-    end
-    def fault
-      if @fault == :lazy
-        nodes = document? ? document.xpath('/env:Envelope/env:Body/descendant-or-self::env:Fault', { 'env' => @soap_namespace }) : []
-        @fault = nodes.any? ? Fault.from_xml(nodes.first, :namespace => @soap_namespace) : nil
-      end
-      return @fault
-    end
-  end
-
   class Fault < Exception
     attr_reader :code, :reason, :details
     def initialize(code, reason, details)
@@ -95,15 +61,16 @@ module Handsoap
 		# Arguments:
 		#   :uri                  => endpoint uri of the service. Required.
 		#   :version              => 1 | 2
-		#   :envelope_namespace    => Namespace of SOAP-envelope
+		#   :envelope_namespace   => Namespace of SOAP-envelope
 		#   :request_content_type => Content-Type of HTTP request.
 		# You must supply either :version or both :envelope_namspace and :request_content_type.
 		# :version is simply a shortcut for default values.
     def self.endpoint(args = {})
       @uri = args[:uri] || raise("Missing option :uri")
 			if args[:version]
-				raise("Unknown protocol version '#{@protocol_version.inspect}'") if SOAP_NAMESPACE[args[:version]].nil?
-				@envelope_namespace = SOAP_NAMESPACE[args[:version]]
+        soap_namespace = { 1 => 'http://schemas.xmlsoap.org/soap/envelope/', 2 => 'http://www.w3.org/2003/05/soap-envelope' }
+				raise("Unknown protocol version '#{@protocol_version.inspect}'") if soap_namespace[args[:version]].nil?
+				@envelope_namespace = soap_namespace[args[:version]]
 				@request_content_type = args[:version] == 1 ? "text/xml" : "application/soap+xml"
 			end
 			@envelope_namespace = args[:envelope_namespace] unless args[:envelope_namespace].nil?
@@ -186,13 +153,15 @@ module Handsoap
     # Hook that is called if the dispatch returns a +Fault+.
     #
     # Default behaviour is to raise the Fault, but you can override this to provide logging and more fine-grained handling faults.
+    #
+    # See also: parse_soap_fault
     def on_fault(fault)
       raise fault
     end
     # Hook that is called if the response does not contain a valid SOAP enevlope.
     #
     # Default behaviour is to raise an error
-    def on_missing_document(soap_response)
+    def on_missing_document(http_response_body)
       raise "The response is not a valid SOAP envelope"
     end
     def debug(message = nil) #:nodoc:
@@ -219,7 +188,7 @@ module Handsoap
         raise "Unknown http driver #{Handsoap.http_driver}"
       end
     end
-    # Send document and parses the response into a +Response+
+    # Send document and parses the response into a +XmlQueryFront::BaseDriver+ (XmlDocument)
     def dispatch(doc, action)
       on_before_dispatch
       headers = {
@@ -243,18 +212,29 @@ module Handsoap
         logger.puts "---"
         logger.puts Handsoap.pretty_format_envelope(response[:body])
       end
-      soap_response = Response.new(response[:body], self.class.envelope_namespace)
-      if soap_response.fault?
-        return on_fault(soap_response.fault)
+      # Start the parsing pipe-line.
+      # There are various stages and hooks for each, so that you can override those in your service classes.
+      xml_document = parse_soap_response_document(response[:body])
+      soap_fault = parse_soap_fault(xml_document)
+      # Is the response a soap-fault?
+      unless soap_fault.nil?
+        return on_fault(soap_fault)
       end
-      if response[:status] >= 300
+      # Does the http-status indicate an error?
+      if response[:status] >= 400
         return on_http_error(response[:status], response[:body])
       end
-      unless soap_response.document?
-        return on_missing_document(soap_response)
+      # Does the response contain a valid xml-document?
+      if xml_document.nil?
+        return on_missing_document(response[:body])
       end
-      on_response_document(soap_response.document)
-      return soap_response
+      # Everything seems in order.
+      on_response_document(xml_document)
+      # BC hack
+      def xml_document.document
+        self
+      end
+      return xml_document
     end
     # Creates a standard SOAP envelope and yields the +Body+ element.
     def make_envelope # :yields: Handsoap::XmlMason::Element
@@ -271,6 +251,21 @@ module Handsoap
         yield doc.find("Body")
       end
       return doc
+    end
+    # String -> [XmlDocument | nil]
+    def parse_soap_response_document(http_body)
+      begin
+        Handsoap::XmlQueryFront.parse_string(http_body, Handsoap.xml_query_driver)
+      rescue Handsoap::XmlQueryFront::ParseError => ex
+        nil
+      end
+    end
+    # XmlDocument -> [Fault | nil]
+    def parse_soap_fault(document)
+      unless document.nil?
+        node = document.xpath('/env:Envelope/env:Body/descendant-or-self::env:Fault', { 'env' => self.class.envelope_namespace }).first
+        Fault.from_xml(node, :namespace => self.class.envelope_namespace) unless node.nil?
+      end
     end
   end
 
