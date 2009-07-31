@@ -285,7 +285,7 @@ module Handsoap
       begin
         doc = Handsoap::XmlQueryFront.parse_string(xml_string, Handsoap.xml_query_driver)
       rescue Exception => ex
-        return "Formatting failed: " + ex.to_s
+        return xml_string
       end
       return doc.to_xml
       # return "\n\e[1;33m" + doc.to_s + "\e[0m"
@@ -295,7 +295,7 @@ module Handsoap
 
 end
 
-# Legacy/CS code here. This shouldn't be used in new applications.
+# Legacy/BC code here. This shouldn't be used in new applications.
 module Handsoap
   class Service
     # Registers a simple method mapping without any arguments and no parsing of response.
