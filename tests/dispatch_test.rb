@@ -9,7 +9,7 @@ def var_dump(val)
 end
 
 class TestService < Handsoap::Service
-  attr_accessor :mock_status, :mock_body, :mock_content_type
+  attr_accessor :mock_status, :mock_body, :mock_content_type, :mock_multipart, :mock_parts
   endpoint :uri => 'http://example.com', :version => 1
   def on_create_document(doc)
     doc.alias 'sc002', "http://www.wstf.org/docs/scenarios/sc002"
@@ -21,7 +21,7 @@ class TestService < Handsoap::Service
     doc.add_namespace 'ns', 'http://www.wstf.org/docs/scenarios/sc002'
   end
   def send_http_request(uri, post_body, headers)
-    return { :status => self.mock_status, :body => self.mock_body, :content_type => self.mock_content_type }
+    return { :status => self.mock_status, :body => self.mock_body, :content_type => self.mock_content_type, :multipart => self.mock_multipart, :parts => self.mock_parts.nil? ? [:head => "Wheres your head at?", :body => self.mock_body] : self.mock_parts }
   end
   def echo(text)
     response = invoke('sc002:Echo') do |message|
@@ -32,7 +32,7 @@ class TestService < Handsoap::Service
 end
 
 class TestServiceLegacyStyle < Handsoap::Service
-  attr_accessor :mock_status, :mock_body, :mock_content_type
+  attr_accessor :mock_status, :mock_body, :mock_content_type, :mock_multipart, :mock_parts
   endpoint :uri => 'http://example.com', :version => 1
   def on_create_document(doc)
     doc.alias 'sc002', "http://www.wstf.org/docs/scenarios/sc002"
@@ -44,7 +44,7 @@ class TestServiceLegacyStyle < Handsoap::Service
     { 'ns' => 'http://www.wstf.org/docs/scenarios/sc002' }
   end
   def send_http_request(uri, post_body, headers)
-    return { :status => self.mock_status, :body => self.mock_body, :content_type => self.mock_content_type }
+    return { :status => self.mock_status, :body => self.mock_body, :content_type => self.mock_content_type, :multipart => self.mock_multipart, :parts => self.mock_parts.nil? ? [:head => "Wheres your head at?", :body => self.mock_body] : self.mock_parts }
   end
   def echo(text)
     response = invoke('sc002:Echo') do |message|
@@ -57,6 +57,8 @@ end
 class TestOfDispatch < Test::Unit::TestCase
   def setup
     TestService.mock_status = 200
+    TestService.mock_multipart = true
+    TestService.mock_parts = nil
     TestService.mock_body = '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
    <soap:Header/>
    <soap:Body>
@@ -103,4 +105,36 @@ class TestOfDispatch < Test::Unit::TestCase
     TestServiceLegacyStyle.mock_content_type = TestService.mock_content_type
     assert_equal "Lirum Opossum", TestServiceLegacyStyle.echo("Lirum Opossum")
   end
+
+
+
+  def test_multipart_response
+    TestService.mock_status = 200
+    TestService.mock_multipart = true
+    TestService.mock_body = '--MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646
+Content-Type: application/xop+xml; charset=UTF-8; type="text/xml"
+Content-Transfer-Encoding: binary
+Content-ID: <0.urn:uuid:FF5B45112F1A1EA3831249088019647@apache.org>
+
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
+   <soap:Header/>
+   <soap:Body>
+      <sc0:EchoResponse>
+         <sc0:text>Lirum Opossum</sc0:text>
+      </sc0:EchoResponse>
+   </soap:Body>
+</soap:Envelope>
+--MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646--'
+    TestService.mock_parts = [{:head => 'No head', :body => '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
+   <soap:Header/>
+   <soap:Body>
+      <sc0:EchoResponse>
+         <sc0:text>Lirum Opossum</sc0:text>
+      </sc0:EchoResponse>
+   </soap:Body>
+</soap:Envelope>'}]
+    TestService.mock_content_type = 'Content-Type: multipart/related; boundary=MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646; type="application/xop+xml"; start="0.urn:uuid:FF5B45112F1A1EA3831249088019647@apache.org"; start-info="text/xml"'
+    assert_equal "Lirum Opossum", TestService.echo("Lirum Opossum")
+  end
+
 end

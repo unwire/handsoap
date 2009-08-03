@@ -189,12 +189,28 @@ module Handsoap
         on_after_create_http_client(http_client)
         http_client.headers = headers
         http_client.http_post post_body
-        return { :status => http_client.response_code, :body => http_client.body_str, :content_type => http_client.content_type }
+        if %r|\Amultipart.*boundary=\"?([^\";,]+)\"?|n.match(http_client.content_type)
+          boundary = $1.dup
+          parts = Handsoap.parse_multipart(boundary, http_client.body_str)
+          is_multipart = true
+        else
+          parts = [{:head => http_client.header_str, :body => http_client.body_str}]
+          is_multipart = false
+        end
+        return { :status => http_client.response_code, :body => http_client.body_str, :content_type => http_client.content_type, :parts => parts, :multipart => is_multipart }
       elsif Handsoap.http_driver == :httpclient
         http_client = HTTPClient.new
         on_after_create_http_client(http_client)
         response = http_client.post(uri, post_body, headers)
-        return { :status => response.status, :body => response.content, :content_type => response.contenttype }
+        if %r|\Amultipart.*boundary=\"?([^\";,]+)\"?|n.match(response.contenttype)
+          boundary = $1.dup
+          parts = Handsoap.parse_multipart(boundary, response.content)
+          is_multipart = true
+        else
+          parts = [{:head => response.all.join("\r\n"), :body => response.content}]
+          is_multipart = false
+        end
+        return { :status => response.status, :body => response.content, :content_type => response.contenttype, :parts => parts, :multipart => is_multipart }
       else
         raise "Unknown http driver #{Handsoap.http_driver}"
       end
@@ -220,12 +236,23 @@ module Handsoap
         logger.puts "--- Response ---"
         logger.puts "HTTP Status: %s" % [response[:status]]
         logger.puts "Content-Type: %s" % [response[:content_type]]
-        logger.puts "---"
-        logger.puts Handsoap.pretty_format_envelope(response[:body])
+        if response[:multipart]
+          num = 0
+          response[:parts].each do |part|
+            num += 1
+            logger.puts "--- Part ##{num} ---"
+            logger.puts part[:head].gsub(/\r\n/, "\n")
+            logger.puts "---"
+            logger.puts Handsoap.pretty_format_envelope(part[:body])
+          end
+        else
+          logger.puts "---"
+          logger.puts Handsoap.pretty_format_envelope(response[:body])
+        end
       end
       # Start the parsing pipe-line.
       # There are various stages and hooks for each, so that you can override those in your service classes.
-      xml_document = parse_soap_response_document(response[:body])
+      xml_document = parse_soap_response_document(response[:parts].first[:body]) # Strictly speaking, the main part doesn't need to be first, but until proven otherwise, we'll just assume that.
       soap_fault = parse_soap_fault(xml_document)
       # Is the response a soap-fault?
       unless soap_fault.nil?
@@ -244,6 +271,10 @@ module Handsoap
       # BC hack
       def xml_document.document
         self
+      end
+      # I should probably use a class for this response object instead ...
+      def xml_document.parts
+        response[:parts]
       end
       return xml_document
     end
@@ -291,6 +322,100 @@ module Handsoap
       # return "\n\e[1;33m" + doc.to_s + "\e[0m"
     end
     return xml_string
+  end
+
+  # Parses a multipart http-response body into parts.
+  # +boundary+ is a string of the boundary token.
+  # +content_io+ is either a string or an IO. If it's an IO, then content_length must be specified.
+  # +content_length+ (optional) is an integer, specifying the length of +content_io+
+  #
+  # This code is lifted from cgi.rb
+  #
+  def self.parse_multipart(boundary, content_io, content_length = nil)
+    if content_io.kind_of? String
+      content_length = content_io.length
+      content_io = StringIO.new(content_io, 'r')
+    elsif !(content_io.kind_of? IO) || content_length.nil?
+      raise "Second argument must be String or IO with content_length"
+    end
+
+    boundary = "--" + boundary
+    quoted_boundary = Regexp.quote(boundary, "n")
+    buf = ""
+    bufsize = 10 * 1024
+    boundary_end = ""
+
+    # start multipart/form-data
+    content_io.binmode if defined? content_io.binmode
+    boundary_size = boundary.size + "\r\n".size
+    content_length -= boundary_size
+    status = content_io.read(boundary_size)
+    if nil == status
+      raise EOFError, "no content body"
+    elsif boundary + "\r\n" != status
+      raise EOFError, "bad content body"
+    end
+
+    parts = []
+
+    loop do
+      head = nil
+      if 10240 < content_length
+        require "tempfile"
+        body = Tempfile.new("CGI")
+      else
+        begin
+          require "stringio"
+          body = StringIO.new
+        rescue LoadError
+          require "tempfile"
+          body = Tempfile.new("CGI")
+        end
+      end
+      body.binmode if defined? body.binmode
+
+      until head and /#{quoted_boundary}(?:\r\n|--)/n.match(buf)
+
+        if (not head) and /\r\n\r\n/n.match(buf)
+          buf = buf.sub(/\A((?:.|\n)*?\r\n)\r\n/n) do
+            head = $1.dup
+            ""
+          end
+          next
+        end
+
+        if head and ( ("\r\n" + boundary + "\r\n").size < buf.size )
+          body.print buf[0 ... (buf.size - ("\r\n" + boundary + "\r\n").size)]
+          buf[0 ... (buf.size - ("\r\n" + boundary + "\r\n").size)] = ""
+        end
+
+        c = if bufsize < content_length
+              content_io.read(bufsize)
+            else
+              content_io.read(content_length)
+            end
+        if c.nil? || c.empty?
+          raise EOFError, "bad content body"
+        end
+        buf.concat(c)
+        content_length -= c.size
+      end
+
+      buf = buf.sub(/\A((?:.|\n)*?)(?:[\r\n]{1,2})?#{quoted_boundary}([\r\n]{1,2}|--)/n) do
+        body.print $1
+        if "--" == $2
+          content_length = -1
+        end
+        boundary_end = $2.dup
+        ""
+      end
+
+      parts << {:head => head, :body => body.string}
+      break if buf.size == 0
+      break if content_length == -1
+    end
+    raise EOFError, "bad boundary end of body part" unless boundary_end =~ /--/
+    parts
   end
 
 end
