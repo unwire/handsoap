@@ -57,30 +57,30 @@ module Handsoap
     def self.logger=(io)
       @@logger = io
     end
-		# Sets the endpoint for the service.
-		# Arguments:
-		#   :uri                  => endpoint uri of the service. Required.
-		#   :version              => 1 | 2
-		#   :envelope_namespace   => Namespace of SOAP-envelope
-		#   :request_content_type => Content-Type of HTTP request.
-		# You must supply either :version or both :envelope_namspace and :request_content_type.
-		# :version is simply a shortcut for default values.
+    # Sets the endpoint for the service.
+    # Arguments:
+    #   :uri                  => endpoint uri of the service. Required.
+    #   :version              => 1 | 2
+    #   :envelope_namespace   => Namespace of SOAP-envelope
+    #   :request_content_type => Content-Type of HTTP request.
+    # You must supply either :version or both :envelope_namspace and :request_content_type.
+    # :version is simply a shortcut for default values.
     def self.endpoint(args = {})
       @uri = args[:uri] || raise("Missing option :uri")
-			if args[:version]
+      if args[:version]
         soap_namespace = { 1 => 'http://schemas.xmlsoap.org/soap/envelope/', 2 => 'http://www.w3.org/2003/05/soap-envelope' }
-				raise("Unknown protocol version '#{@protocol_version.inspect}'") if soap_namespace[args[:version]].nil?
-				@envelope_namespace = soap_namespace[args[:version]]
-				@request_content_type = args[:version] == 1 ? "text/xml" : "application/soap+xml"
-			end
-			@envelope_namespace = args[:envelope_namespace] unless args[:envelope_namespace].nil?
-			@request_content_type = args[:request_content_type] unless args[:request_content_type].nil?
-			if @envelope_namespace.nil? || @request_content_type.nil?
-				raise("Missing option :envelope_namespace, :request_content_type or :version")
-			end
+        raise("Unknown protocol version '#{@protocol_version.inspect}'") if soap_namespace[args[:version]].nil?
+        @envelope_namespace = soap_namespace[args[:version]]
+        @request_content_type = args[:version] == 1 ? "text/xml" : "application/soap+xml"
+      end
+      @envelope_namespace = args[:envelope_namespace] unless args[:envelope_namespace].nil?
+      @request_content_type = args[:request_content_type] unless args[:request_content_type].nil?
+      if @envelope_namespace.nil? || @request_content_type.nil?
+        raise("Missing option :envelope_namespace, :request_content_type or :version")
+      end
     end
     def self.envelope_namespace
-			@envelope_namespace
+      @envelope_namespace
     end
     def self.request_content_type
       @request_content_type
@@ -316,7 +316,7 @@ module Handsoap
       begin
         doc = Handsoap::XmlQueryFront.parse_string(xml_string, Handsoap.xml_query_driver)
       rescue Exception => ex
-        return "Formatting failed: " + ex.to_s
+        return xml_string
       end
       return doc.to_xml
       # return "\n\e[1;33m" + doc.to_s + "\e[0m"
@@ -420,7 +420,7 @@ module Handsoap
 
 end
 
-# Legacy/CS code here. This shouldn't be used in new applications.
+# Legacy/BC code here. This shouldn't be used in new applications.
 module Handsoap
   class Service
     # Registers a simple method mapping without any arguments and no parsing of response.
