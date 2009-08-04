@@ -207,7 +207,7 @@ module Handsoap
           parts = Handsoap.parse_multipart(boundary, response.content)
           is_multipart = true
         else
-          parts = [{:head => response.all.join("\r\n"), :body => response.content}]
+          parts = [{:head => response.header.all.join("\r\n"), :body => response.content}]
           is_multipart = false
         end
         return { :status => response.status, :body => response.content, :content_type => response.contenttype, :parts => parts, :multipart => is_multipart }
