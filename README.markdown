@@ -149,7 +149,7 @@ Put your service in a file under `app/models`. You should extend `Handsoap::Serv
 
 You need to provide the endpoint and the SOAP version (1.1 or 1.2). If in doubt, use version 2.
 
-A service usually has a namespace for describing the message-body ([RPC/Litteral style](http://www.ibm.com/developerworks/webservices/library/ws-whichwsdl/#N1011F)). You should set this in the `on_create_document` handler.
+A service usually has a namespace for describing the message-body ([RPC/Litteral style](http://www.ibm.com/developerworks/webservices/library/ws-whichwsdl/#N1011F)). You should set this in the `on_create_document` handler. Likewise, the response returned *from* the server will contain elements that typically are defined in a single namespace relevant to the service. You can register this in the handler `on_response_document`.
 
 A typical service looks like the following:
 
@@ -158,9 +158,15 @@ A typical service looks like the following:
 
     class Example::FooService < Handsoap::Service
       endpoint EXAMPLE_SERVICE_ENDPOINT
-      on_create_document do |doc|
-        doc.alias 'wsdl', "http://example.org/ws/spec"
+      def on_create_document(doc)
+        # register namespaces for the request
+        doc.alias 'tns', "http://example.org/ws/spec"
       end
+      def on_response_document(doc)
+        # register namespaces for the response
+        doc.add_namespace 'ns', 'http://example.org/ws/spec'
+      end
+
       # public methods
       # todo
 
@@ -198,10 +204,10 @@ You should use Ruby naming-conventions for methods names. If the method has side
 Repeat code inside the invoke-block, should be refactored out to *builders*, and the response should be parsed with a *parser*.
 
     def update_icon!(icon)
-      response = invoke("wsdl:UpdateIcon") do |message|
+      response = invoke("tns:UpdateIcon") do |message|
         build_icon!(message, icon)
       end
-      parse_icon(response.document.xpath('//icon').first)
+      parse_icon(response/"//icon").first)
     end
 
 
@@ -220,7 +226,7 @@ It's recommended that you stick to the following style/naming scheme:
 
     # xml -> icon
     def parse_icon(node)
-      { :href => node['href'], :type => node['type'] }
+      { :href => (node/"@href").to_s, :type => (node/"@type").to_s }
     end
 
 or, if you prefer, you can use a class to represent entities:
@@ -235,8 +241,8 @@ or, if you prefer, you can use a class to represent entities:
 
     # xml -> icon
     def parse_icon(node)
-      Icon.new :href => node['href'],
-               :type => node['type']
+      Icon.new :href => (node/"@href").to_s,
+               :type => (node/"@type").to_s
     end
 
 License
