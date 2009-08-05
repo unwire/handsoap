@@ -28,6 +28,7 @@ module Handsoap
         require 'rexml/document'
       elsif driver == :nokogiri
         require 'nokogiri'
+        gem('nokogiri') # work around bug in rubygems for Ruby 1.9
         if Gem.loaded_specs['nokogiri'].version < Gem::Version.new('1.3.0')
           raise "Incompatible version of Nokogiri. Please upgrade gem."
         end
