@@ -39,13 +39,13 @@ module Handsoap
         raise "Missing option :namespace"
       end
       ns = { 'env' => options[:namespace] }
-      fault_code = node.xpath('./env:Code/env:Value/text()', ns).to_s
-      if fault_code == ""
-        fault_code = node.xpath('./faultcode/text()', ns).to_s
+      fault_code = node.xpath('./env:Code/env:Value', ns).to_s
+      unless fault_code
+        fault_code = node.xpath('./faultcode', ns).to_s
       end
-      reason = node.xpath('./env:Reason/env:Text[1]/text()', ns).to_s
-      if reason == ""
-        reason = node.xpath('./faultstring/text()', ns).to_s
+      reason = node.xpath('./env:Reason/env:Text[1]', ns).to_s
+      unless reason
+        reason = node.xpath('./faultstring', ns).to_s
       end
       details = node.xpath('./detail/*', ns)
       self.new(fault_code, reason, details)
