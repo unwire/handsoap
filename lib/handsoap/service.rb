@@ -410,7 +410,18 @@ module Handsoap
         ""
       end
 
-      parts << {:head => head, :body => body.string}
+      body.rewind
+      parts << {:head => head, :body => body.read(body.size)}
+
+      # if body.kind_of? ::StringIO
+      #   parts << {:head => head, :body => body.string}
+      # elsif body.kind_of? ::Tempfile
+      #   body.rewind
+      #   parts << {:head => head, :body => body.read(body.size)}
+      # else
+      #   raise "body must be StringIO or Tempfile"
+      # end
+
       break if buf.size == 0
       break if content_length == -1
     end
