@@ -187,7 +187,7 @@ module Handsoap
       if Handsoap.http_driver == :curb
         http_client = Curl::Easy.new(uri)
         on_after_create_http_client(http_client)
-        http_client.headers = headers
+        http_client.headers.merge! headers
         http_client.http_post post_body
         if %r|\Amultipart.*boundary=\"?([^\";,]+)\"?|n.match(http_client.content_type)
           boundary = $1.dup
