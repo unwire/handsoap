@@ -11,7 +11,7 @@ module AbstractHttpDriverTestCase
     request = Handsoap::Http::Request.new("http://www.example.com/")
     # p request
     response = http.send_http_request(request)
-    # p response
+    p response
     assert_equal 200, response.status
   end
 end
@@ -75,6 +75,28 @@ foobar' + ((0..10240).map { |i| (rand(27) + 65).chr }.join) + '
     parts = Handsoap::Http.parse_multipart(boundary, content_io)
     assert_equal 1, parts.size
     assert parts.first[:body] =~ /^foobar/
+  end
+
+  def test_parse_multipart_request
+    raw_header = 'Server: Apache-Coyote/1.1
+Content-Type: multipart/related; boundary=MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249656297568; type="application/xop+xml"; start="0.urn:uuid:FF5B45112F1A1EA3831249656297569@apache.org"; start-info="text/xml"
+Transfer-Encoding: chunked
+Date: Fri, 07 Aug 2009 14:44:56 GMT'.gsub(/\n/, "\r\n")
+
+    raw_body = '--MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249656297568
+Content-Type: application/xop+xml; charset=UTF-8; type="text/xml"
+Content-Transfer-Encoding: binary
+Content-ID: <0.urn:uuid:FF5B45112F1A1EA3831249656297569@apache.org>
+
+Lorem ipsum
+--MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249656297568--
+'.gsub(/\n/, "\r\n")
+
+    response = Handsoap::Http.parse_http_part(raw_header, raw_body, 200)
+    str = response.inspect do |body|
+      "BODY-BEGIN : #{body} : BODY-END"
+    end
+    assert str =~ /BODY-BEGIN :/
   end
 
 end

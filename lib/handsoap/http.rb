@@ -79,6 +79,33 @@ module Handsoap
       def multipart?
         !! @parts
       end
+      def inspect(&block)
+        str = inspect_head
+        if headers.any?
+          str << headers.map { |key,values| values.map {|value| Handsoap::Http.normalize_header_key(key) + ": " + value + "\n" }.join("")  }.join("")
+        end
+        if body
+          if multipart?
+            if block_given?
+              str << parts.map{|part| part.inspect(&block) }.join("")
+            else
+              str << parts.map{|part| part.inspect }.join("")
+            end
+          elsif body
+            str <<  "---\n"
+            if block_given?
+              str << yield(body)
+            else
+              str << body
+            end
+            str << "\n---"
+          end
+        end
+      end
+      private
+      def inspect_head
+        "--- Part ---\n"
+      end
     end
 
     # Represents a HTTP Response.
@@ -88,23 +115,9 @@ module Handsoap
         @status = status.to_i
         super(headers, body, parts)
       end
-      def inspect
-        "--- Response ---\n" +
-          "HTTP Status: #{status}\n" +
-          (
-           if headers.any?
-             "---\n" + headers.map { |key,values| values.map {|value| Handsoap::Http.normalize_header_key(key) + ": " + value + "\n" }.join("")  }.join("")
-           else
-             ""
-           end
-           ) +
-          (
-           if body
-             "---\n" + body
-           else
-             ""
-           end
-           )
+      private
+      def inspect_head
+        "--- Response ---\n" + "HTTP Status: #{status}\n"
       end
     end
 
