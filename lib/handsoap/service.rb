@@ -2,6 +2,7 @@
 require 'time'
 require 'handsoap/xml_mason'
 require 'handsoap/xml_query_front'
+require 'handsoap/http'
 
 module Handsoap
 
@@ -11,8 +12,7 @@ module Handsoap
 
   def self.http_driver=(driver)
     @http_driver = driver
-    require 'httpclient' if driver == :httpclient
-    require 'curb' if driver == :curb
+    Handsoap::Http.drivers[driver].load!
     return driver
   end
 
@@ -49,6 +49,21 @@ module Handsoap
       end
       details = node.xpath('./detail/*', ns)
       self.new(fault_code, reason, details)
+    end
+  end
+
+  class SoapResponse
+    attr_reader :document, :http_response
+    def initialize(document, http_response)
+      @document = document
+      @http_response = http_response
+    end
+    def method_missing(method, *args)
+      if @document.respond_to?(method)
+        @document.__send__ method, *args
+      else
+        super
+      end
     end
   end
 
@@ -152,8 +167,8 @@ module Handsoap
     # Hook that is called if there is a HTTP level error.
     #
     # Default behaviour is to raise an error.
-    def on_http_error(status, content)
-      raise "HTTP error #{status}"
+    def on_http_error(response)
+      raise "HTTP error #{response.status}"
     end
     # Hook that is called if the dispatch returns a +Fault+.
     #
@@ -169,7 +184,7 @@ module Handsoap
     #
     # Note that if your service has operations that are one-way, you shouldn't raise an error here.
     # This is however a fairly exotic case, so that is why the default behaviour is to raise an error.
-    def on_missing_document(http_response_body)
+    def on_missing_document(response)
       raise "The response is not a valid SOAP envelope"
     end
     def debug(message = nil) #:nodoc:
@@ -184,36 +199,21 @@ module Handsoap
     end
     # Does the actual HTTP level interaction.
     def send_http_request(uri, post_body, headers)
-      if Handsoap.http_driver == :curb
-        http_client = Curl::Easy.new(uri)
-        on_after_create_http_client(http_client)
-        http_client.headers.merge! headers
-        http_client.http_post post_body
-        if %r|\Amultipart.*boundary=\"?([^\";,]+)\"?|n.match(http_client.content_type)
-          boundary = $1.dup
-          parts = Handsoap.parse_multipart(boundary, http_client.body_str)
-          is_multipart = true
-        else
-          parts = [{:head => http_client.header_str, :body => http_client.body_str}]
-          is_multipart = false
-        end
-        return { :status => http_client.response_code, :body => http_client.body_str, :content_type => http_client.content_type, :parts => parts, :multipart => is_multipart }
-      elsif Handsoap.http_driver == :httpclient
-        http_client = HTTPClient.new
-        on_after_create_http_client(http_client)
-        response = http_client.post(uri, post_body, headers)
-        if %r|\Amultipart.*boundary=\"?([^\";,]+)\"?|n.match(response.contenttype)
-          boundary = $1.dup
-          parts = Handsoap.parse_multipart(boundary, response.content)
-          is_multipart = true
-        else
-          parts = [{:head => response.header.all.join("\r\n"), :body => response.content}]
-          is_multipart = false
-        end
-        return { :status => response.status, :body => response.content, :content_type => response.contenttype, :parts => parts, :multipart => is_multipart }
-      else
-        raise "Unknown http driver #{Handsoap.http_driver}"
+      request = Handsoap::Http::Request.new(uri)
+      headers.each do |key, value|
+        request.add_header(key, value)
       end
+      request.body = post_body
+      debug do |logger|
+        logger.puts request.inspect
+      end
+      on_after_create_http_request(request)
+      http = Handsoap::Http.drivers[Handsoap.http_driver]
+      response = http.send_http_request(request)
+      debug do |logger|
+        logger.puts response.inspect(&Handsoap.pretty_format_envelope)
+      end
+      return response
     end
     # Send document and parses the response into a +XmlQueryFront::XmlElement+ (XmlDocument)
     def dispatch(doc, action)
@@ -222,61 +222,26 @@ module Handsoap
         "Content-Type" => "#{self.class.request_content_type};charset=UTF-8"
       }
       headers["SOAPAction"] = action unless action.nil?
-      body = doc.to_s
-      debug do |logger|
-        logger.puts "==============="
-        logger.puts "--- Request ---"
-        logger.puts "URI: %s" % [self.class.uri]
-        logger.puts headers.map { |key,value| key + ": " + value }.join("\n")
-        logger.puts "---"
-        logger.puts body
-      end
-      response = send_http_request(self.class.uri, body, headers)
-      debug do |logger|
-        logger.puts "--- Response ---"
-        logger.puts "HTTP Status: %s" % [response[:status]]
-        logger.puts "Content-Type: %s" % [response[:content_type]]
-        if response[:multipart]
-          num = 0
-          response[:parts].each do |part|
-            num += 1
-            logger.puts "--- Part ##{num} ---"
-            logger.puts part[:head].gsub(/\r\n/, "\n")
-            logger.puts "---"
-            logger.puts Handsoap.pretty_format_envelope(part[:body])
-          end
-        else
-          logger.puts "---"
-          logger.puts Handsoap.pretty_format_envelope(response[:body])
-        end
-      end
+      response = send_http_request(self.class.uri, doc.to_s, headers)
       # Start the parsing pipe-line.
       # There are various stages and hooks for each, so that you can override those in your service classes.
-      xml_document = parse_soap_response_document(response[:parts].first[:body]) # Strictly speaking, the main part doesn't need to be first, but until proven otherwise, we'll just assume that.
+      xml_document = parse_soap_response_document(response.primary_part.body)
       soap_fault = parse_soap_fault(xml_document)
       # Is the response a soap-fault?
       unless soap_fault.nil?
         return on_fault(soap_fault)
       end
       # Does the http-status indicate an error?
-      if response[:status] >= 400
-        return on_http_error(response[:status], response[:body])
+      if response.status >= 400
+        return on_http_error(response)
       end
       # Does the response contain a valid xml-document?
       if xml_document.nil?
-        return on_missing_document(response[:body])
+        return on_missing_document(response)
       end
       # Everything seems in order.
       on_response_document(xml_document)
-      # BC hack
-      def xml_document.document
-        self
-      end
-      # I should probably use a class for this response object instead ...
-      def xml_document.parts
-        response[:parts]
-      end
-      return xml_document
+      return SoapResponse.new(xml_document, response)
     end
     # Creates a standard SOAP envelope and yields the +Body+ element.
     def make_envelope # :yields: Handsoap::XmlMason::Element

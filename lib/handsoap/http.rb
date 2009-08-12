@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 module Handsoap
 
   # The Handsoap::Http module provides a uniform interface to various http drivers.
@@ -114,6 +114,14 @@ module Handsoap
       def initialize(status, headers, body, parts = nil)
         @status = status.to_i
         super(headers, body, parts)
+      end
+      def primary_part
+        # Strictly speaking, the main part doesn't need to be first, but until proven otherwise, we'll just assume that.
+        if multipart?
+          parts.first
+        else
+          self
+        end
       end
       private
       def inspect_head
