@@ -27,6 +27,25 @@ module Handsoap
           @headers[key] = [value]
         end
       end
+      def inspect
+        "===============\n" +
+          "--- Request ---\n" +
+          "URI: #{url}\n" +
+          (
+           if headers.any?
+             "---\n" + headers.map { |key,values| values.map {|value| Handsoap::Http.normalize_header_key(key) + ": " + value + "\n" }.join("")  }.join("")
+           else
+             ""
+           end
+           ) +
+          (
+           if body
+             "---\n" + body
+           else
+             ""
+           end
+           )
+      end
     end
 
     # Represents a HTTP Part.
@@ -66,27 +85,36 @@ module Handsoap
     class Response < Part
       attr_reader :status
       def initialize(status, headers, body, parts = nil)
-        @status = status
+        @status = status.to_i
         super(headers, body, parts)
       end
-    end
-
-    @@drivers =  {
-      :net_http => NetHttp,
-      :curb => Curb,
-      :httpclient => Httpclient
-    }
-
-    def self.drivers
-      @@drivers
+      def inspect
+        "--- Response ---\n" +
+          "HTTP Status: #{status}\n" +
+          (
+           if headers.any?
+             "---\n" + headers.map { |key,values| values.map {|value| Handsoap::Http.normalize_header_key(key) + ": " + value + "\n" }.join("")  }.join("")
+           else
+             ""
+           end
+           ) +
+          (
+           if body
+             "---\n" + body
+           else
+             ""
+           end
+           )
+      end
     end
 
     # driver for httpclient
     module Httpclient
-      def self.self.load!
+      def self.load!
         require 'httpclient'
       end
       def self.send_http_request(request)
+        self.load!
         http_client = HTTPClient.new
         # pack headers
         headers = request.headers.inject([]) do |arr, (k,v)|
@@ -108,10 +136,11 @@ module Handsoap
 
     # driver for curb
     module Curb
-      def self.self.load!
+      def self.load!
         require 'curb'
       end
       def self.send_http_request(request)
+        self.load!
         http_client = Curl::Easy.new(request.url)
         # pack headers
         headers = request.headers.inject([]) do |arr, (k,v)|
@@ -131,22 +160,23 @@ module Handsoap
         else
           raise "Unsupported request method #{request.http_method}"
         end
-        Handsoap::Http.parse_http_part(http_client.header_str, http_client.body_str, http_client.response_code, http_client.content_type)
+        Handsoap::Http.parse_http_part(http_client.header_str.gsub(/^HTTP.*\r\n/, ""), http_client.body_str, http_client.response_code, http_client.content_type)
       end
     end
 
     # driver for net/http
     module NetHttp
-      def self.self.load!
+      def self.load!
         require 'net/http'
         require 'uri'
       end
       def self.send_http_request(request)
+        self.load!
         url = request.url
-        unless url.kind_of? URI::Generic
-          url = URI.parse(url)
+        unless url.kind_of? ::URI::Generic
+          url = ::URI.parse(url)
         end
-        URI::Generic.send(:public, :path_query) # hackety hack
+        ::URI::Generic.send(:public, :path_query) # hackety hack
         path = url.path_query
         http_request = case request.http_method
                        when :get
@@ -182,7 +212,7 @@ module Handsoap
             h
           end
         end
-        parse_http_part(http_response.get_headers, http_response.body, http_response.code)
+        Handsoap::Http.parse_http_part(http_response.get_headers, http_response.body, http_response.code)
       end
     end
 
@@ -336,6 +366,20 @@ module Handsoap
         }
       }
       header
+    end
+
+    def self.normalize_header_key(key)
+      key.split("-").map{|s| s.downcase.capitalize }.join("-")
+    end
+
+    @@drivers =  {
+      :net_http => NetHttp,
+      :curb => Curb,
+      :httpclient => Httpclient
+    }
+
+    def self.drivers
+      @@drivers
     end
 
   end
