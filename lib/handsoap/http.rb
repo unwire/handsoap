@@ -1,8 +1,10 @@
 
 module Handsoap
 
+  # The Handsoap::Http module provides a uniform interface to various http drivers.
   module Http
 
+    # Represents a HTTP Request.
     class Request
       attr_reader :url, :http_method, :headers, :body
       attr_writer :body
@@ -27,6 +29,8 @@ module Handsoap
       end
     end
 
+    # Represents a HTTP Part.
+    # For simple HTTP-requests there is only one part, which is the response.
     class Part
       attr_reader :headers, :body, :parts
       def initialize(headers, body, parts = nil)
@@ -34,11 +38,31 @@ module Handsoap
         @body = body
         @parts = parts
       end
+      # Returns a header.
+      # Returns String | Array | nil
+      def [](key)
+        key.to_s.downcase!
+        (@headers[key] && @headers[key].length == 1) ? @headers[key].first : @headers[key]
+      end
+      # Returns the mime-type part of the content-type header
+      def mime_type
+        @headers['content-type'].first.match(/^[^;]+/).to_s if @headers['content-type']
+      end
+      # Returns the charset part of the content-type header
+      def charset
+        if @headers['content-type']
+          match_data = @headers['content-type'].first.match(/^[^;]+; charset=([^;]+)/)
+          if match_data
+            match_data[1].to_s
+          end
+        end
+      end
       def multipart?
         !! @parts
       end
     end
 
+    # Represents a HTTP Response.
     class Response < Part
       attr_reader :status
       def initialize(status, headers, body, parts = nil)
@@ -65,15 +89,20 @@ module Handsoap
       def self.send_http_request(request)
         http_client = HTTPClient.new
         # pack headers
-        headers = []
-        request.headers.each do |k,v|
-          v.each do |value|
-            headers << [k, value]
-          end
+        headers = request.headers.inject([]) do |arr, (k,v)|
+          arr + v.map {|x| [k,x] }
         end
         response = http_client.request(request.http_method, request.url, nil, request.body, headers)
-        # TODO wrap response
-        # response.status, response.contenttype, response.header.all.join("\r\n"), response.content
+        response_headers = response.header.all.inject({}) do |h, (k, v)|
+          k.downcase!
+          if h[k].nil?
+            h[k] = [v]
+          else
+            h[k] << v
+          end
+          h
+        end
+        Handsoap::Http.parse_http_part(response_headers, response.content, response.status, response.contenttype)
       end
     end
 
@@ -85,12 +114,8 @@ module Handsoap
       def self.send_http_request(request)
         http_client = Curl::Easy.new(request.url)
         # pack headers
-        headers = []
-        request.headers.each do |k,v|
-          v.each do |value|
-            # TODO mime-encode header values?
-            headers << "#{k}: #{value}"
-          end
+        headers = request.headers.inject([]) do |arr, (k,v)|
+          arr + v.map {|x| "#{k}: #{x}" }
         end
         http_client.headers = headers
         # I don't think put/delete is actually supported ..
@@ -106,8 +131,7 @@ module Handsoap
         else
           raise "Unsupported request method #{request.http_method}"
         end
-        # TODO wrap response
-        # http_client.response_code, http_client.content_type, http_client.header_str, http_client.body_str
+        Handsoap::Http.parse_http_part(http_client.header_str, http_client.body_str, http_client.response_code, http_client.content_type)
       end
     end
 
@@ -115,6 +139,7 @@ module Handsoap
     module NetHttp
       def self.self.load!
         require 'net/http'
+        require 'uri'
       end
       def self.send_http_request(request)
         url = request.url
@@ -137,14 +162,53 @@ module Handsoap
                        end
         http_client = Net::HTTP.new(url.host, url.port)
         http_client.read_timeout = 120
-        # TODO body, headers
+        request.headers.each do |k, values|
+          values.each do |v|
+            http_request.add_field(k, v)
+          end
+        end
+        http_request.body = request.body
+        # require 'stringio'
         # debug_output = StringIO.new
         # http_client.set_debug_output debug_output
-       http_response = http_client.start do |http|
-          http.request(http_request)
+        http_response = http_client.start do |client|
+          client.request(http_request)
         end
         # puts debug_output.string
-        # TODO wrap response
+        # hacky-wacky
+        def http_response.get_headers
+          @header.inject({}) do |h, (k, v)|
+            h[k.downcase] = v
+            h
+          end
+        end
+        parse_http_part(http_response.get_headers, http_response.body, http_response.code)
+      end
+    end
+
+    # Parses a raw http response into a +Response+ or +Part+ object.
+    def self.parse_http_part(headers, body, status = nil, content_type = nil)
+      if headers.kind_of? String
+        headers = parse_headers(headers)
+      end
+      if content_type.nil? && headers['content-type']
+        content_type = headers['content-type'].first
+      end
+      boundary = parse_multipart_boundary(content_type)
+      parts = if boundary
+        parse_multipart(boundary, body).map {|raw_part| parse_http_part(raw_part[:head], raw_part[:body]) }
+      end
+      if status.nil?
+        Handsoap::Http::Part.new(headers, body, parts)
+      else
+        Handsoap::Http::Response.new(status, headers, body, parts)
+      end
+    end
+
+    # Content-Type header string -> mime-boundary | nil
+    def self.parse_multipart_boundary(content_type)
+      if %r|\Amultipart.*boundary=\"?([^\";,]+)\"?|n.match(content_type)
+        $1.dup
       end
     end
 
@@ -244,8 +308,34 @@ module Handsoap
       parts
     end
 
-    def self.parse_headers(header_str)
-      # TODO
+    # lifted from webrick/httputils.rb
+    def self.parse_headers(raw)
+      header = Hash.new([].freeze)
+      field = nil
+      raw.each {|line|
+        case line
+        when /^([A-Za-z0-9!\#$%&'*+\-.^_`|~]+):\s*(.*?)\s*\z/om
+          field, value = $1, $2
+          field.downcase!
+          header[field] = [] unless header.has_key?(field)
+          header[field] << value
+        when /^\s+(.*?)\s*\z/om
+          value = $1
+          unless field
+            raise "bad header '#{line.inspect}'."
+          end
+          header[field][-1] << " " << value
+        else
+          raise "bad header '#{line.inspect}'."
+        end
+      }
+      header.each {|key, values|
+        values.each {|value|
+          value.strip!
+          value.gsub!(/\s+/, " ")
+        }
+      }
+      header
     end
 
   end
