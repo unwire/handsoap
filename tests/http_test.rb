@@ -11,7 +11,7 @@ module AbstractHttpDriverTestCase
     request = Handsoap::Http::Request.new("http://www.example.com/")
     # p request
     response = http.send_http_request(request)
-    p response
+    # p response
     assert_equal 200, response.status
   end
 end

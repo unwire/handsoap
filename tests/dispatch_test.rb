@@ -8,8 +8,12 @@ def var_dump(val)
   puts val.to_yaml.gsub(/ !ruby\/object:.+$/, '')
 end
 
+class MockResponse < Handsoap::Http::Response
+  attr_writer :status, :headers, :body, :parts
+end
+
 class TestService < Handsoap::Service
-  attr_accessor :mock_status, :mock_body, :mock_content_type, :mock_multipart, :mock_parts
+  attr_accessor :mock_http_response
   endpoint :uri => 'http://example.com', :version => 1
 
   def on_create_document(doc)
@@ -24,7 +28,7 @@ class TestService < Handsoap::Service
   end
 
   def send_http_request(uri, post_body, headers)
-    return { :status => self.mock_status, :body => self.mock_body, :content_type => self.mock_content_type, :multipart => self.mock_multipart, :parts => self.mock_parts.nil? ? [:head => "Wheres your head at?", :body => self.mock_body] : self.mock_parts }
+    self.mock_http_response
   end
 
   def echo(text)
@@ -36,7 +40,7 @@ class TestService < Handsoap::Service
 end
 
 class TestServiceLegacyStyle < Handsoap::Service
-  attr_accessor :mock_status, :mock_body, :mock_content_type, :mock_multipart, :mock_parts
+  attr_accessor :mock_http_response
   endpoint :uri => 'http://example.com', :version => 1
 
   def on_create_document(doc)
@@ -51,7 +55,7 @@ class TestServiceLegacyStyle < Handsoap::Service
   end
 
   def send_http_request(uri, post_body, headers)
-    return { :status => self.mock_status, :body => self.mock_body, :content_type => self.mock_content_type, :multipart => self.mock_multipart, :parts => self.mock_parts.nil? ? [:head => "Wheres your head at?", :body => self.mock_body] : self.mock_parts }
+    self.mock_http_response
   end
 
   def echo(text)
@@ -64,10 +68,7 @@ end
 
 class TestOfDispatch < Test::Unit::TestCase
   def setup
-    TestService.mock_status = 200
-    TestService.mock_multipart = false
-    TestService.mock_parts = nil
-    TestService.mock_body = '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
+    body = '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
    <soap:Header/>
    <soap:Body>
       <sc0:EchoResponse>
@@ -75,7 +76,7 @@ class TestOfDispatch < Test::Unit::TestCase
       </sc0:EchoResponse>
    </soap:Body>
 </soap:Envelope>'
-    TestService.mock_content_type = "text/xml;charset=utf-8"
+    TestService.mock_http_response = MockResponse.new(200, {"content-type" => ["text/xml;charset=utf-8"]}, body)
   end
 
   def test_normal_usecase
@@ -83,21 +84,21 @@ class TestOfDispatch < Test::Unit::TestCase
   end
 
   def test_raises_on_http_error
-    TestService.mock_status = 404
+    TestService.mock_http_response.status = 404
     assert_raise RuntimeError do
       TestService.echo("Lirum Opossum")
     end
   end
 
   def test_raises_on_invalid_document
-    TestService.mock_body = "not xml!"
+    TestService.mock_http_response.body = "not xml!"
     assert_raise RuntimeError do
       TestService.echo("Lirum Opossum")
     end
   end
 
   def test_raises_on_fault
-    TestService.mock_body = '<?xml version="1.0" encoding="UTF-8"?>
+    TestService.mock_http_response.body = '<?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <soap:Fault>
@@ -113,73 +114,29 @@ class TestOfDispatch < Test::Unit::TestCase
   end
 
   def test_legacy_parser_helpers
-    TestServiceLegacyStyle.mock_status = TestService.mock_status
-    TestServiceLegacyStyle.mock_body = TestService.mock_body
-    TestServiceLegacyStyle.mock_content_type = TestService.mock_content_type
+    TestServiceLegacyStyle.mock_http_response = TestService.mock_http_response
     assert_equal "Lirum Opossum", TestServiceLegacyStyle.echo("Lirum Opossum")
   end
 
   def test_multipart_response
-    TestService.mock_status = 200
-    TestService.mock_multipart = true
-    TestService.mock_body = ''
-    TestService.mock_parts = [{:head => 'No head', :body => '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
+    body = '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
    <soap:Header/>
    <soap:Body>
       <sc0:EchoResponse>
          <sc0:text>Lirum Opossum</sc0:text>
       </sc0:EchoResponse>
    </soap:Body>
-</soap:Envelope>'}]
-    TestService.mock_content_type = 'Content-Type: multipart/related; boundary=MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646; type="application/xop+xml"; start="0.urn:uuid:FF5B45112F1A1EA3831249088019647@apache.org"; start-info="text/xml"'
+</soap:Envelope>'
+    TestService.mock_http_response.parts = [Handsoap::Http::Part.new({}, body, nil)]
     assert_equal "Lirum Opossum", TestService.echo("Lirum Opossum")
   end
 
   def test_raises_on_no_document
-    TestService.mock_status = 202
-    TestService.mock_body = ''
+    TestService.mock_http_response.status = 202
+    TestService.mock_http_response.body = ''
     assert_raise RuntimeError do
       TestService.echo("Lirum Opossum")
     end
-  end
-
-  def test_parse_multipart_small
-    boundary = 'MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646'
-    content_io = '--MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646
-Content-Type: application/xop+xml; charset=UTF-8; type="text/xml"
-Content-Transfer-Encoding: binary
-Content-ID: <0.urn:uuid:FF5B45112F1A1EA3831249088019647@apache.org>
-
-<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:sc0="http://www.wstf.org/docs/scenarios/sc002">
-   <soap:Header/>
-   <soap:Body>
-      <sc0:EchoResponse>
-         <sc0:text>Lirum Opossum</sc0:text>
-      </sc0:EchoResponse>
-   </soap:Body>
-</soap:Envelope>
---MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646--
-'
-    content_io.gsub!(/\n/, "\r\n")
-    parts = Handsoap.parse_multipart(boundary, content_io)
-    assert_equal 1, parts.size
-    assert parts.first[:body] =~ /^<soap:Envelope/
-  end
-
-  def test_parse_multipart_large
-    boundary = 'MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646'
-    content_io = '--MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646
-Content-Type: application/xop+xml; charset=UTF-8; type="text/xml"
-Content-Transfer-Encoding: binary
-Content-ID: <0.urn:uuid:FF5B45112F1A1EA3831249088019647@apache.org>
-
-foobar' + ((0..10240).map { |i| (rand(27) + 65).chr }.join) + '
---MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646--
-'
-    content_io.gsub!(/\n/, "\r\n")
-    parts = Handsoap.parse_multipart(boundary, content_io)
-    assert_equal 1, parts.size
-    assert parts.first[:body] =~ /^foobar/
   end
 
 end
