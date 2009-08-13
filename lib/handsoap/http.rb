@@ -30,10 +30,10 @@ module Handsoap
       def inspect
         "===============\n" +
           "--- Request ---\n" +
-          "URI: #{url}\n" +
+          "#{http_method.to_s.upcase} #{url}\n" +
           (
            if headers.any?
-             "---\n" + headers.map { |key,values| values.map {|value| Handsoap::Http.normalize_header_key(key) + ": " + value + "\n" }.join("")  }.join("")
+             "---\n" + headers.map { |key,values| values.map {|value| key + ": " + value + "\n" }.join("")  }.join("")
            else
              ""
            end
