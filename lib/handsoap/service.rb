@@ -157,7 +157,7 @@ module Handsoap
     # Hook that is called after the http_client is created.
     #
     # You can override this to customize the http_client
-    def on_after_create_http_client(http_client)
+    def on_after_create_http_request(http_request)
     end
     # Hook that is called when there is a response.
     #
@@ -211,7 +211,9 @@ module Handsoap
       http = Handsoap::Http.drivers[Handsoap.http_driver]
       response = http.send_http_request(request)
       debug do |logger|
-        logger.puts response.inspect(&Handsoap.pretty_format_envelope)
+        logger.puts(response.inspect do |body|
+          Handsoap.pretty_format_envelope(body).chomp
+        end)
       end
       return response
     end
