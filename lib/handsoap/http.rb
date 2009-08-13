@@ -7,7 +7,7 @@ module Handsoap
     # Represents a HTTP Request.
     class Request
       attr_reader :url, :http_method, :headers, :body
-      attr_writer :body
+      attr_writer :body, :http_method
       def initialize(url, http_method = :get)
         @url = url
         @http_method = http_method

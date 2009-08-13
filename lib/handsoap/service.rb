@@ -199,7 +199,7 @@ module Handsoap
     end
     # Does the actual HTTP level interaction.
     def send_http_request(uri, post_body, headers)
-      request = Handsoap::Http::Request.new(uri)
+      request = Handsoap::Http::Request.new(uri, :post)
       headers.each do |key, value|
         request.add_header(key, value)
       end
