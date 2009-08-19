@@ -1,19 +1,91 @@
 require 'rubygems'
 require 'test/unit'
 
+require 'socket'
+include Socket::Constants
+
 $LOAD_PATH << "#{File.dirname(__FILE__)}/../lib/"
 require "handsoap"
 require 'handsoap/http'
 
+class TestSocketServer
+
+  class << self
+    attr_accessor :request, :response
+    attr_reader :port
+  end
+
+  def self.start
+    @socket = Socket.new AF_INET, SOCK_STREAM, 0
+    @socket.bind Socket.pack_sockaddr_in(0, 'localhost')
+    @port = @socket.getsockname.unpack("snA*")[1]
+
+    @request = nil
+    @response = ""
+    @socket_thread = Thread.new do
+      while true
+        @socket.listen 1
+        client_fd, client_sockaddr = @socket.sysaccept
+        client_socket = Socket.for_fd client_fd
+        @request = client_socket.recvfrom(8192)[0]
+        client_socket.print @response
+        client_socket.close
+      end
+    end
+  end
+
+  self.start
+end
+
 module AbstractHttpDriverTestCase
+
   def test_connect_to_example_com
+    TestSocketServer.response = "HTTP/1.1 200 OK
+Server: Ruby
+Connection: close
+Content-Type: text/plain
+Date: Wed, 19 Aug 2009 12:13:45 GMT
+
+OK
+
+".gsub(/\n/, "\r\n")
+
     http = Handsoap::Http.drivers[self.driver]
-    request = Handsoap::Http::Request.new("http://www.example.com/")
-    # p request
+    request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/")
     response = http.send_http_request(request)
-    # p response
     assert_equal 200, response.status
   end
+
+  def test_chunked
+    TestSocketServer.response = "HTTP/1.1 200 OK
+Server: Ruby
+Connection: Keep-Alive
+Content-Type: text/plain
+Transfer-Encoding: chunked
+Date: Wed, 19 Aug 2009 12:13:45 GMT
+
+b
+Hello World
+0
+
+".gsub(/\n/, "\r\n")
+
+    http = Handsoap::Http.drivers[self.driver]
+    request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/")
+    response = http.send_http_request(request)
+    assert_equal "Hello World", response.body
+  end
+
+  def test_chunked_big
+    TestSocketServer.response = File.read('chunked.fixture')
+
+    http = Handsoap::Http.drivers[self.driver]
+    request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/")
+    response = http.send_http_request(request)
+    # p response
+    # assert_equal "Hello World", response.body
+  end
+
 end
 
 class TestOfNetHttpDriver < Test::Unit::TestCase
@@ -78,12 +150,12 @@ foobar' + ((0..10240).map { |i| (rand(27) + 65).chr }.join) + '
   end
 
   def test_parse_multipart_request
-    raw_header = 'Server: Apache-Coyote/1.1
+    header = 'Server: Apache-Coyote/1.1
 Content-Type: multipart/related; boundary=MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249656297568; type="application/xop+xml"; start="0.urn:uuid:FF5B45112F1A1EA3831249656297569@apache.org"; start-info="text/xml"
 Transfer-Encoding: chunked
 Date: Fri, 07 Aug 2009 14:44:56 GMT'.gsub(/\n/, "\r\n")
 
-    raw_body = '--MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249656297568
+    body = '--MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249656297568
 Content-Type: application/xop+xml; charset=UTF-8; type="text/xml"
 Content-Transfer-Encoding: binary
 Content-ID: <0.urn:uuid:FF5B45112F1A1EA3831249656297569@apache.org>
@@ -92,7 +164,7 @@ Lorem ipsum
 --MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249656297568--
 '.gsub(/\n/, "\r\n")
 
-    response = Handsoap::Http.parse_http_part(raw_header, raw_body, 200)
+    response = Handsoap::Http.parse_http_part(header, body, 200)
     str = response.inspect do |body|
       "BODY-BEGIN : #{body} : BODY-END"
     end
