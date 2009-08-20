@@ -76,16 +76,6 @@ Hello World
     assert_equal "Hello World", response.body
   end
 
-  def test_chunked_big
-    TestSocketServer.response = File.read('chunked.fixture')
-
-    http = Handsoap::Http.drivers[self.driver]
-    request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/")
-    response = http.send_http_request(request)
-    # p response
-    # assert_equal "Hello World", response.body
-  end
-
 end
 
 class TestOfNetHttpDriver < Test::Unit::TestCase
