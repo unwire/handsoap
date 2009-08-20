@@ -11,24 +11,37 @@ require 'handsoap/http'
 class TestSocketServer
 
   class << self
-    attr_accessor :request, :response
+    attr_accessor :requests, :responses, :debug
     attr_reader :port
+  end
+
+  def self.reset!
+    @debug = false
+    @requests = []
+    @responses = []
   end
 
   def self.start
     @socket = Socket.new AF_INET, SOCK_STREAM, 0
     @socket.bind Socket.pack_sockaddr_in(0, 'localhost')
     @port = @socket.getsockname.unpack("snA*")[1]
-
-    @request = nil
-    @response = ""
+    self.reset!
     @socket_thread = Thread.new do
       while true
         @socket.listen 1
         client_fd, client_sockaddr = @socket.sysaccept
         client_socket = Socket.for_fd client_fd
-        @request = client_socket.recvfrom(8192)[0]
-        client_socket.print @response
+        while @responses.any?
+          @requests << client_socket.recvfrom(8192)[0]
+          response = @responses.shift
+          if @debug
+            puts "---"
+            puts @requests
+            puts "---"
+            puts response
+          end
+          client_socket.print response
+        end
         client_socket.close
       end
     end
@@ -40,24 +53,25 @@ end
 module AbstractHttpDriverTestCase
 
   def test_connect_to_example_com
-    TestSocketServer.response = "HTTP/1.1 200 OK
+    TestSocketServer.reset!
+    TestSocketServer.responses << "HTTP/1.1 200 OK
 Server: Ruby
 Connection: close
 Content-Type: text/plain
 Date: Wed, 19 Aug 2009 12:13:45 GMT
 
-OK
-
-".gsub(/\n/, "\r\n")
+OK".gsub(/\n/, "\r\n")
 
     http = Handsoap::Http.drivers[self.driver]
     request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/")
     response = http.send_http_request(request)
     assert_equal 200, response.status
+    assert_equal "OK", response.body
   end
 
   def test_chunked
-    TestSocketServer.response = "HTTP/1.1 200 OK
+    TestSocketServer.reset!
+    TestSocketServer.responses << "HTTP/1.1 200 OK
 Server: Ruby
 Connection: Keep-Alive
 Content-Type: text/plain
@@ -90,6 +104,29 @@ class TestOfCurbDriver < Test::Unit::TestCase
   def driver
     :curb
   end
+
+  # Curl will use 100-Continue if Content-Length > 1024
+  def test_continue
+    TestSocketServer.reset!
+    # TestSocketServer.debug  = true
+    TestSocketServer.responses << "HTTP/1.1 100 Continue
+
+".gsub(/\n/, "\r\n")
+    TestSocketServer.responses << "HTTP/1.1 200 OK
+Server: Ruby
+Connection: close
+Content-Type: text/plain
+Date: Wed, 19 Aug 2009 12:13:45 GMT
+
+okeydokey".gsub(/\n/, "\r\n")
+
+    http = Handsoap::Http.drivers[self.driver]
+    request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/", :post)
+    request.body = (0...1099).map{ ('a'..'z').to_a[rand(26)] }.join
+    response = http.send_http_request(request)
+    assert_equal "okeydokey", response.body
+  end
+
 end
 
 class TestOfHttpclientDriver < Test::Unit::TestCase
