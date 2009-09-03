@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-require 'rubygems'
 require 'httpclient'
 require 'openssl'
 require 'nokogiri'
