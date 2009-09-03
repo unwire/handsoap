@@ -24,7 +24,7 @@ module Handsoap
     @xml_query_driver = Handsoap::XmlQueryFront.load_driver!(driver)
   end
 
-  class Fault < Exception
+  class Fault < StandardError
     attr_reader :code, :reason, :details
     def initialize(code, reason, details)
       @code = code
@@ -49,6 +49,14 @@ module Handsoap
       end
       details = node.xpath('./detail/*', ns)
       self.new(fault_code, reason, details)
+    end
+  end
+
+  class HttpError < StandardError
+    attr_reader :response
+    def initialize(response)
+      @response = response
+      super()
     end
   end
 
@@ -168,7 +176,7 @@ module Handsoap
     #
     # Default behaviour is to raise an error.
     def on_http_error(response)
-      raise "HTTP error #{response.status}"
+      raise HttpError, response
     end
     # Hook that is called if the dispatch returns a +Fault+.
     #
@@ -282,7 +290,7 @@ module Handsoap
     if /^<.*:Envelope/.match(xml_string)
       begin
         doc = Handsoap::XmlQueryFront.parse_string(xml_string, Handsoap.xml_query_driver)
-      rescue Exception => ex
+      rescue
         return xml_string
       end
       return doc.to_xml
