@@ -85,7 +85,7 @@ class TestOfDispatch < Test::Unit::TestCase
 
   def test_raises_on_http_error
     TestService.mock_http_response.status = 404
-    assert_raise RuntimeError do
+    assert_raise ::Handsoap::HttpError do
       TestService.echo("Lirum Opossum")
     end
   end
