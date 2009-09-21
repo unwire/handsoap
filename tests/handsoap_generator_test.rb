@@ -45,6 +45,11 @@ class HandsoapGeneratorTest < Test::Unit::TestCase
     invoke_generator!
   end
 
+  def test_can_parse_multiple_interfaces
+    wsdl_file = File.join(File.dirname(__FILE__), 'Weather.wsdl')
+    Rails::Generator::Scripts::Generate.new.run(["handsoap", wsdl_file, "--backtrace", "--quiet"], :destination => fake_rails_root)
+  end
+
   private
 
   def fake_rails_root
@@ -55,3 +60,5 @@ class HandsoapGeneratorTest < Test::Unit::TestCase
     Dir.glob(File.join(fake_rails_root, "**/*"))
   end
 end
+
+

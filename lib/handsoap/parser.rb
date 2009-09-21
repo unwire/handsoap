@@ -129,9 +129,19 @@ module Handsoap
       end
 
       def interface
-        tmp = interfaces
-        raise "Expected exactly 1 interface/portType in WSDL" if tmp.length != 1
-        tmp[0]
+        all_interfaces = self.interfaces
+        if all_interfaces.length != 1
+          # There are more than one portType, so we take a pick
+          all_bindings = self.bindings
+          all_interfaces.each do |interface|
+            b = all_bindings.find {|binding| binding.name == interface.name }
+            if [:soap11, :soap12].include? b.protocol
+              return interface
+            end
+          end
+          raise "Can't find a suitable soap 1.1 or 1.2 interface/portType in WSDL"
+        end
+        all_interfaces.first
       end
 
       def target_ns
