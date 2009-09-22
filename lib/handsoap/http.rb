@@ -6,13 +6,19 @@ module Handsoap
 
     # Represents a HTTP Request.
     class Request
-      attr_reader :url, :http_method, :headers, :body
+      attr_reader :url, :http_method, :headers, :body, :username, :password
       attr_writer :body, :http_method
       def initialize(url, http_method = :get)
         @url = url
         @http_method = http_method
         @headers = {}
         @body = nil
+        @username = nil
+        @password = nil
+      end
+      def set_auth(username, password)
+        @username = username
+        @password = password
       end
       def add_header(key, value)
         if @headers[key].nil?
@@ -31,6 +37,13 @@ module Handsoap
         "===============\n" +
           "--- Request ---\n" +
           "#{http_method.to_s.upcase} #{url}\n" +
+          (
+           if username && password
+             "Auth credentials: #{username}:#{password}\n"
+           else
+             ""
+           end
+           ) +
           (
            if headers.any?
              "---\n" + headers.map { |key,values| values.map {|value| key + ": " + value + "\n" }.join("")  }.join("")
@@ -137,6 +150,11 @@ module Handsoap
       def self.send_http_request(request)
         self.load!
         http_client = HTTPClient.new
+        # Set credentials. The driver will negotiate the actual scheme
+        if request.username && request.password
+          domain = request.url.match(/^(http(s?):\/\/[^\/]+\/)/)[1]
+          http_client.set_auth(domain, request.username, request.password)
+        end
         # pack headers
         headers = request.headers.inject([]) do |arr, (k,v)|
           arr + v.map {|x| [k,x] }
@@ -163,6 +181,10 @@ module Handsoap
       def self.send_http_request(request)
         self.load!
         http_client = Curl::Easy.new(request.url)
+        # Set credentials. The driver will negotiate the actual scheme
+        if request.username && request.password
+          http_client.userpwd = [request.username, ":", request.password].join
+        end
         # pack headers
         headers = request.headers.inject([]) do |arr, (k,v)|
           arr + v.map {|x| "#{k}: #{x}" }
@@ -213,6 +235,10 @@ module Handsoap
                        end
         http_client = Net::HTTP.new(url.host, url.port)
         http_client.read_timeout = 120
+        if request.username && request.password
+          # TODO: http://codesnippets.joyent.com/posts/show/1075
+          http_request.basic_auth request.username, request.password
+        end
         request.headers.each do |k, values|
           values.each do |v|
             http_request.add_field(k, v)
@@ -231,6 +257,13 @@ module Handsoap
           @header.inject({}) do |h, (k, v)|
             h[k.downcase] = v
             h
+          end
+        end
+        # net/http only supports basic auth. We raise a warning if the server requires something else.
+        if http_response.code == 401 && http_response.get_headers['www-authenticate']
+          auth_type = http_response.get_headers['www-authenticate'].chomp.match(/\w+/)[0].downcase
+          if auth_type != "basic"
+            raise "Authentication type #{auth_type} is unsupported by net/http"
           end
         end
         Handsoap::Http.parse_http_part(http_response.get_headers, http_response.body, http_response.code)
