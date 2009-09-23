@@ -33,6 +33,7 @@ namespace :test do
     test.test_files = FileList.new('tests/**/*_test.rb') do |list|
       list.exclude 'tests/benchmark_integration_test.rb'
       list.exclude 'tests/service_integration_test.rb'
+      list.exclude 'tests/httpauth_integration_test.rb'
     end
     test.libs << 'tests'
     test.verbose = true
