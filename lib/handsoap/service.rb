@@ -122,6 +122,15 @@ module Handsoap
         super
       end
     end
+    def envelope_namespace
+      self.class.envelope_namespace
+    end
+    def request_content_type
+      self.class.request_content_type
+    end
+    def uri
+      self.class.uri
+    end
     # Creates an XML document and sends it over HTTP.
     #
     # +action+ is the QName of the rootnode of the envelope.
@@ -229,10 +238,10 @@ module Handsoap
     def dispatch(doc, action)
       on_before_dispatch
       headers = {
-        "Content-Type" => "#{self.class.request_content_type};charset=UTF-8"
+        "Content-Type" => "#{self.request_content_type};charset=UTF-8"
       }
       headers["SOAPAction"] = action unless action.nil?
-      response = send_http_request(self.class.uri, doc.to_s, headers)
+      response = send_http_request(self.uri, doc.to_s, headers)
       # Start the parsing pipe-line.
       # There are various stages and hooks for each, so that you can override those in your service classes.
       xml_document = parse_soap_response_document(response.primary_part.body)
@@ -256,7 +265,7 @@ module Handsoap
     # Creates a standard SOAP envelope and yields the +Body+ element.
     def make_envelope # :yields: Handsoap::XmlMason::Element
       doc = XmlMason::Document.new do |doc|
-        doc.alias 'env', self.class.envelope_namespace
+        doc.alias 'env', self.envelope_namespace
         doc.add "env:Envelope" do |env|
           env.add "*:Header"
           env.add "*:Body"
@@ -280,8 +289,8 @@ module Handsoap
     # XmlDocument -> [Fault | nil]
     def parse_soap_fault(document)
       unless document.nil?
-        node = document.xpath('/env:Envelope/env:Body/descendant-or-self::env:Fault', { 'env' => self.class.envelope_namespace }).first
-        Fault.from_xml(node, :namespace => self.class.envelope_namespace) unless node.nil?
+        node = document.xpath('/env:Envelope/env:Body/descendant-or-self::env:Fault', { 'env' => self.envelope_namespace }).first
+        Fault.from_xml(node, :namespace => self.envelope_namespace) unless node.nil?
       end
     end
   end
