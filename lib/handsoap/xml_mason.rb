@@ -55,9 +55,13 @@ module Handsoap
       def initialize # :yields: Document
         super
         @document_element = nil
+        @xml_header = true
         if block_given?
           yield self
         end
+      end
+      def xml_header=(xml_header)
+        @xml_header = !! xml_header
       end
       def append_child(node)
         if not @document_element.nil?
@@ -81,7 +85,7 @@ module Handsoap
         if @document_element.nil?
           raise "No document element added."
         end
-        "<?xml version='1.0' ?>" + "\n" + @document_element.to_s
+        (@xml_header ? "<?xml version='1.0' ?>\n" : "") + @document_element.to_s
       end
     end
 

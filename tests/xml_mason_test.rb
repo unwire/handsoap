@@ -96,6 +96,13 @@ class TestOfXmlMason < Test::Unit::TestCase
     assert_equal "<ninjitsu>ninjitsu</ninjitsu>", node.document.find('ninjitsu').to_s
     assert_equal "<ninjitsu>ninjitsu</ninjitsu>", node.document.find(:ninjitsu).to_s
   end
+  def test_xml_header_is_optional
+    doc = Handsoap::XmlMason::Document.new do |doc|
+      doc.add "foo", "Lorem Ipsum"
+    end
+    doc.xml_header = false
+    assert_equal "<foo>Lorem Ipsum</foo>", doc.to_s
+  end
 end
 
 =begin
