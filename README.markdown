@@ -99,7 +99,7 @@ License
 Copyright: [Unwire A/S](http://www.unwire.dk), 2009
 
 License: [Creative Commons Attribution 2.5 Denmark License](http://creativecommons.org/licenses/by/2.5/dk/deed.en_GB)
-
+or: [LGPL 3](http://www.gnu.org/copyleft/lesser.html)
 ___
 
 troelskn@gmail.com - April, 2009
