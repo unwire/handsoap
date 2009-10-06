@@ -1,8 +1,6 @@
 Handsoap
 ===
 
-**This fork is no longer the main repository. Please use [unwire/handsoap](http://github.com/unwire/handsoap) instead.**
-
 Install
 ---
 
