@@ -1,0 +1,9 @@
+*.gem
+*.log
+*.pid
+*.sqlite3
+*.tmproj
+.DS_Store
+log/*
+pkg/*
+tests/rails_root/*
