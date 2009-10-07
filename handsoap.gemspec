@@ -24,12 +24,20 @@ Gem::Specification.new do |s|
      "lib/handsoap.rb",
      "lib/handsoap/compiler.rb",
      "lib/handsoap/http.rb",
+     "lib/handsoap/http/drivers.rb",
+     "lib/handsoap/http/drivers/curb.rb",
+     "lib/handsoap/http/drivers/httpclient.rb",
+     "lib/handsoap/http/drivers/mock_driver.rb",
+     "lib/handsoap/http/drivers/net_http.rb",
+     "lib/handsoap/http/part.rb",
+     "lib/handsoap/http/request.rb",
+     "lib/handsoap/http/response.rb",
      "lib/handsoap/parser.rb",
      "lib/handsoap/service.rb",
      "lib/handsoap/xml_mason.rb",
      "lib/handsoap/xml_query_front.rb"
   ]
-  s.homepage = %q{http://github.com/troelskn/handsoap}
+  s.homepage = %q{http://github.com/unwire/handsoap}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.requirements = ["You need to install either \"curb\" or \"httpclient\", using one of:\n    gem install curb\n    gem install httpclient", "It is recommended that you install either \"nokogiri\" or \"libxml-ruby\""]
