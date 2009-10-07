@@ -95,7 +95,7 @@ Server: Apache-Coyote/1.1'.gsub(/\n/, "\r\n")
     </ns1:GetAccountByIdResponse>
   </soap:Body>
 </soap:Envelope>'
-    Handsoap::Http.drivers[:mock] = Handsoap::Http::HttpMock.new :headers => headers, :content => body, :status => 200
+    Handsoap::Http.drivers[:mock] = Handsoap::Http::Drivers::MockDriver.new :headers => headers, :content => body, :status => 200
     Handsoap.http_driver = :mock
   end
 
