@@ -23,7 +23,7 @@ class TestSocketServer
 
   def self.start
     @socket = Socket.new AF_INET, SOCK_STREAM, 0
-    @socket.bind Socket.pack_sockaddr_in(0, 'localhost')
+    @socket.bind Socket.pack_sockaddr_in(0, "127.0.0.1")
     @port = @socket.getsockname.unpack("snA*")[1]
     self.reset!
     @socket_thread = Thread.new do
@@ -63,7 +63,7 @@ Date: Wed, 19 Aug 2009 12:13:45 GMT
 OK".gsub(/\n/, "\r\n")
 
     http = Handsoap::Http.drivers[self.driver]
-    request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/")
+    request = Handsoap::Http::Request.new("http://127.0.0.1:#{TestSocketServer.port}/")
     response = http.send_http_request(request)
     assert_equal 200, response.status
     assert_equal "OK", response.body
@@ -85,7 +85,7 @@ Hello World
 ".gsub(/\n/, "\r\n")
 
     http = Handsoap::Http.drivers[self.driver]
-    request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/")
+    request = Handsoap::Http::Request.new("http://127.0.0.1:#{TestSocketServer.port}/")
     response = http.send_http_request(request)
     assert_equal "Hello World", response.body
   end
@@ -121,7 +121,7 @@ Date: Wed, 19 Aug 2009 12:13:45 GMT
 okeydokey".gsub(/\n/, "\r\n")
 
     http = Handsoap::Http.drivers[self.driver]
-    request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/", :post)
+    request = Handsoap::Http::Request.new("http://127.0.0.1:#{TestSocketServer.port}/", :post)
     request.body = (0...1099).map{ ('a'..'z').to_a[rand(26)] }.join
     response = http.send_http_request(request)
     assert_equal "okeydokey", response.body
