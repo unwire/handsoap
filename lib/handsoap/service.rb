@@ -226,14 +226,9 @@ module Handsoap
       end
       on_after_create_http_request(request)
       http = Handsoap::Http.drivers[Handsoap.http_driver]
-      response = http.send_http_request(request)
-      debug do |logger|
-        logger.puts(response.inspect do |body|
-          Handsoap.pretty_format_envelope(body).chomp
-        end)
-      end
-      return response
+      http.send_http_request(request)
     end
+
     # Send document and parses the response into a +XmlQueryFront::XmlElement+ (XmlDocument)
     def dispatch(doc, action)
       on_before_dispatch
@@ -242,8 +237,17 @@ module Handsoap
       }
       headers["SOAPAction"] = action unless action.nil?
       response = send_http_request(self.uri, doc.to_s, headers)
-      # Start the parsing pipe-line.
-      # There are various stages and hooks for each, so that you can override those in your service classes.
+      parse_http_response(response)
+    end
+    
+    # Start the parsing pipe-line.
+    # There are various stages and hooks for each, so that you can override those in your service classes.
+    def parse_http_response(response)
+      debug do |logger|
+        logger.puts(response.inspect do |body|
+          Handsoap.pretty_format_envelope(body).chomp
+        end)
+      end
       xml_document = parse_soap_response_document(response.primary_part.body)
       soap_fault = parse_soap_fault(xml_document)
       # Is the response a soap-fault?
@@ -262,6 +266,7 @@ module Handsoap
       on_response_document(xml_document)
       return SoapResponse.new(xml_document, response)
     end
+
     # Creates a standard SOAP envelope and yields the +Body+ element.
     def make_envelope # :yields: Handsoap::XmlMason::Element
       doc = XmlMason::Document.new do |doc|
@@ -278,6 +283,7 @@ module Handsoap
       end
       return doc
     end
+
     # String -> [XmlDocument | nil]
     def parse_soap_response_document(http_body)
       begin
@@ -286,6 +292,7 @@ module Handsoap
         nil
       end
     end
+
     # XmlDocument -> [Fault | nil]
     def parse_soap_fault(document)
       unless document.nil?
