@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+require 'handsoap/http/drivers/abstract_driver'
 
 module Handsoap
   module Http
     module Drivers
-      module Curb
+      class CurbDriver < AbstractDriver
         def self.load!
           require 'curb'
         end
@@ -33,7 +34,7 @@ module Handsoap
           else
             raise "Unsupported request method #{request.http_method}"
           end
-          Handsoap::Http.parse_http_part(http_client.header_str.gsub(/^HTTP.*\r\n/, ""), http_client.body_str, http_client.response_code, http_client.content_type)
+          parse_http_part(http_client.header_str.gsub(/^HTTP.*\r\n/, ""), http_client.body_str, http_client.response_code, http_client.content_type)
         end
       end
     end

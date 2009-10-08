@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+require 'handsoap/http/drivers/abstract_driver'
 
 module Handsoap
   module Http
     module Drivers
-      module Httpclient
+      class HttpClientDriver < AbstractDriver
         def self.load!
           require 'httpclient'
         end
@@ -30,7 +31,7 @@ module Handsoap
             end
             h
           end
-          Handsoap::Http.parse_http_part(response_headers, response.content, response.status, response.contenttype)
+          parse_http_part(response_headers, response.content, response.status, response.contenttype)
         end
       end
     end

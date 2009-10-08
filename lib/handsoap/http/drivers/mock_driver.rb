@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+require 'handsoap/http/drivers/abstract_driver'
 
 module Handsoap
   module Http
@@ -11,7 +12,7 @@ module Handsoap
       #     Handsoap.http_driver = :mock
       #
       # Remember that headers should use \r\n, rather than \n.
-      class MockDriver
+      class MockDriver < AbstractDriver
         attr_accessor :mock, :last_request, :is_loaded
 
         def initialize(mock)
@@ -25,7 +26,7 @@ module Handsoap
 
         def send_http_request(request)
           @last_request = request
-          Handsoap::Http.parse_http_part(mock[:headers], mock[:content], mock[:status], mock[:content_type])
+          self.class.parse_http_part(mock[:headers], mock[:content], mock[:status], mock[:content_type])
         end
       end
     end

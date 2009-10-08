@@ -3,7 +3,7 @@
 module Handsoap
   module Http
     module Drivers
-      module NetHttp
+      class NetHttpDriver < AbstractDriver
         def self.load!
           require 'net/http'
           require 'uri'
@@ -62,7 +62,7 @@ module Handsoap
               raise "Authentication type #{auth_type} is unsupported by net/http"
             end
           end
-          Handsoap::Http.parse_http_part(http_response.get_headers, http_response.body, http_response.code)
+          parse_http_part(http_response.get_headers, http_response.body, http_response.code)
         end
       end
     end

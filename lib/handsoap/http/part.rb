@@ -37,7 +37,7 @@ module Handsoap
       def inspect(&block)
         str = inspect_head
         if headers.any?
-          str << headers.map { |key,values| values.map {|value| Handsoap::Http.normalize_header_key(key) + ": " + value + "\n" }.join("")  }.join("")
+          str << headers.map { |key,values| values.map {|value| Handsoap::Http::Drivers::AbstractDriver.normalize_header_key(key) + ": " + value + "\n" }.join("")  }.join("")
         end
         if body
           if multipart?

@@ -155,7 +155,7 @@ Content-ID: <0.urn:uuid:FF5B45112F1A1EA3831249088019647@apache.org>
 --MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646--
 '
     content_io.gsub!(/\n/, "\r\n")
-    parts = Handsoap::Http.parse_multipart(boundary, content_io)
+    parts = Handsoap::Http::Drivers::AbstractDriver.parse_multipart(boundary, content_io)
     assert_equal 1, parts.size
     assert parts.first[:body] =~ /^<soap:Envelope/
   end
@@ -171,7 +171,7 @@ foobar' + ((0..10240).map { |i| (rand(27) + 65).chr }.join) + '
 --MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646--
 '
     content_io.gsub!(/\n/, "\r\n")
-    parts = Handsoap::Http.parse_multipart(boundary, content_io)
+    parts = Handsoap::Http::Drivers::AbstractDriver.parse_multipart(boundary, content_io)
     assert_equal 1, parts.size
     assert parts.first[:body] =~ /^foobar/
   end
@@ -191,7 +191,7 @@ Lorem ipsum
 --MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249656297568--
 '.gsub(/\n/, "\r\n")
 
-    response = Handsoap::Http.parse_http_part(header, body, 200)
+    response = Handsoap::Http::Drivers::AbstractDriver.parse_http_part(header, body, 200)
     str = response.inspect do |body|
       "BODY-BEGIN : #{body} : BODY-END"
     end
