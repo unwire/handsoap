@@ -100,10 +100,10 @@ Server: Apache-Coyote/1.1'.gsub(/\n/, "\r\n")
   end
 
   def test_get_account_by_id
-    mock_http = Handsoap::Http.drivers[:mock]
+    driver = Handsoap::Http.drivers[:mock].new # passthrough, doesn’t actually create a new instance
     result = AccountService.get_account_by_id(10)
-    assert_equal 'http://ws.example.org/', mock_http.last_request.url
-    assert_equal :post, mock_http.last_request.http_method
+    assert_equal 'http://ws.example.org/', driver.last_request.url
+    assert_equal :post, driver.last_request.http_method
     assert_kind_of Account, result
   end
 end

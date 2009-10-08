@@ -9,8 +9,7 @@ module Handsoap
           require 'httpclient'
         end
 
-        def self.send_http_request(request)
-          self.load!
+        def send_http_request(request)
           http_client = HTTPClient.new
           # Set credentials. The driver will negotiate the actual scheme
           if request.username && request.password

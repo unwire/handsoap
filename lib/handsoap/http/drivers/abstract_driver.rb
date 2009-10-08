@@ -7,8 +7,12 @@ module Handsoap
         def self.load!
         end
         
+        def initialize
+          self.class.load!
+        end
+        
         # Parses a raw http response into a +Response+ or +Part+ object.
-        def self.parse_http_part(headers, body, status = nil, content_type = nil)
+        def parse_http_part(headers, body, status = nil, content_type = nil)
           if headers.kind_of? String
             headers = parse_headers(headers)
           end
@@ -27,7 +31,7 @@ module Handsoap
         end
 
         # Content-Type header string -> mime-boundary | nil
-        def self.parse_multipart_boundary(content_type)
+        def parse_multipart_boundary(content_type)
           if %r|\Amultipart.*boundary=\"?([^\";,]+)\"?|n.match(content_type)
             $1.dup
           end
@@ -40,7 +44,7 @@ module Handsoap
         #
         # This code is lifted from cgi.rb
         #
-        def self.parse_multipart(boundary, content_io, content_length = nil)
+        def parse_multipart(boundary, content_io, content_length = nil)
           if content_io.kind_of? String
             content_length = content_io.length
             content_io = StringIO.new(content_io, 'r')
@@ -130,7 +134,7 @@ module Handsoap
         end
 
         # lifted from webrick/httputils.rb
-        def self.parse_headers(raw)
+        def parse_headers(raw)
           header = Hash.new([].freeze)
           field = nil
           raw.gsub(/^(\r\n)+|(\r\n)+$/, '').each {|line|

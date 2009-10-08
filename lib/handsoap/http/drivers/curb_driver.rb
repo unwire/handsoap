@@ -9,8 +9,7 @@ module Handsoap
           require 'curb'
         end
 
-        def self.send_http_request(request)
-          self.load!
+        def send_http_request(request)
           http_client = Curl::Easy.new(request.url)
           # Set credentials. The driver will negotiate the actual scheme
           if request.username && request.password

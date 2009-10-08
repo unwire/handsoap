@@ -225,8 +225,8 @@ module Handsoap
         logger.puts request.inspect
       end
       on_after_create_http_request(request)
-      http = Handsoap::Http.drivers[Handsoap.http_driver]
-      http.send_http_request(request)
+      driver = Handsoap::Http.drivers[Handsoap.http_driver].new
+      driver.send_http_request(request)
     end
 
     # Send document and parses the response into a +XmlQueryFront::XmlElement+ (XmlDocument)

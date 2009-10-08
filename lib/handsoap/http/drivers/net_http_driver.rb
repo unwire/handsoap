@@ -9,8 +9,7 @@ module Handsoap
           require 'uri'
         end
 
-        def self.send_http_request(request)
-          self.load!
+        def send_http_request(request)
           url = request.url
           unless url.kind_of? ::URI::Generic
             url = ::URI.parse(url)
