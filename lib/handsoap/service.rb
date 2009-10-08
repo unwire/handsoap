@@ -214,6 +214,7 @@ module Handsoap
         end
       end
     end
+
     # Does the actual HTTP level interaction.
     def send_http_request(uri, post_body, headers)
       request = Handsoap::Http::Request.new(uri, :post)
@@ -236,10 +237,21 @@ module Handsoap
         "Content-Type" => "#{self.request_content_type};charset=UTF-8"
       }
       headers["SOAPAction"] = action unless action.nil?
-      response = send_http_request(self.uri, doc.to_s, headers)
-      parse_http_response(response)
+      response_or_deferred = send_http_request(self.uri, doc.to_s, headers)
+      
+      # EventMachine deferred?
+      if response.respond_to? :callback
+        deferred = response
+        deferred.callback {
+          response = deferred.options['handsoap.response']
+          deferred.options['handsoap.soap_response'] = parse_http_response(response)
+        }
+        deferred
+      else
+        parse_http_response(response)
+      end
     end
-    
+
     # Start the parsing pipe-line.
     # There are various stages and hooks for each, so that you can override those in your service classes.
     def parse_http_response(response)

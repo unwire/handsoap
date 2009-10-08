@@ -58,6 +58,7 @@ module AbstractHttpDriverTestCase
 Server: Ruby
 Connection: close
 Content-Type: text/plain
+Content-Length: 2
 Date: Wed, 19 Aug 2009 12:13:45 GMT
 
 OK".gsub(/\n/, "\r\n")
@@ -66,6 +67,7 @@ OK".gsub(/\n/, "\r\n")
     request = Handsoap::Http::Request.new("http://127.0.0.1:#{TestSocketServer.port}/")
     response = driver.send_http_request(request)
     assert_equal 200, response.status
+    assert_equal ["Ruby"], response.headers['server']
     assert_equal "OK", response.body
   end
 
@@ -116,6 +118,7 @@ class TestOfCurbDriver < Test::Unit::TestCase
 Server: Ruby
 Connection: close
 Content-Type: text/plain
+Content-Length: 9
 Date: Wed, 19 Aug 2009 12:13:45 GMT
 
 okeydokey".gsub(/\n/, "\r\n")
