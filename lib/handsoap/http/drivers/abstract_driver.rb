@@ -4,6 +4,9 @@ module Handsoap
   module Http
     module Drivers
       class AbstractDriver
+        def self.load!
+        end
+        
         # Parses a raw http response into a +Response+ or +Part+ object.
         def self.parse_http_part(headers, body, status = nil, content_type = nil)
           if headers.kind_of? String
