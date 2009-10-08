@@ -10,9 +10,7 @@ module Handsoap
           require 'em-http'
         end
 
-        def send_http_request(request)
-          super
-          
+        def send_http_request(request)          
           emr = EventMachine::HttpRequest.new(request.url)
           
           # Set credentials. The driver will negotiate the actual scheme
@@ -35,7 +33,7 @@ module Handsoap
           end
           
           deferred.callback {
-            @response = parse_http_part(deferred.response_header, deferred.response, deferred.response_header.status)
+            deferred.options['handsoap.response'] = parse_http_part(deferred.response_header, deferred.response, deferred.response_header.status)
           }
           
           deferred

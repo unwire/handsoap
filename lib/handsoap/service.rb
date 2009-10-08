@@ -237,7 +237,7 @@ module Handsoap
         "Content-Type" => "#{self.request_content_type};charset=UTF-8"
       }
       headers["SOAPAction"] = action unless action.nil?
-      response_or_deferred = send_http_request(self.uri, doc.to_s, headers)
+      response = send_http_request(self.uri, doc.to_s, headers)
       
       # EventMachine deferred?
       if response.respond_to? :callback

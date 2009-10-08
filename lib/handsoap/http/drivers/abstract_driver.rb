@@ -4,17 +4,11 @@ module Handsoap
   module Http
     module Drivers
       class AbstractDriver
-        attr_accessor :request, :response
-
         def self.load!
         end
         
         def initialize
           self.class.load!
-        end
-        
-        def send_http_request(request)
-          @request = request
         end
         
         # Parses a raw http response into a +Response+ or +Part+ object.

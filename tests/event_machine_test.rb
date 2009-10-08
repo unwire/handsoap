@@ -74,7 +74,7 @@ OK".gsub(/\n/, "\r\n")
       deferred = driver.send_http_request(request)
 
       deferred.callback {
-        response = driver.response
+        response = deferred.options['handsoap.response']
         # TODO: Normalize response headers to match other drivers
         assert_equal "Ruby", response.headers['SERVER']
         assert_equal "OK", response.body
