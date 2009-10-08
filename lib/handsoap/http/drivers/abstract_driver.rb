@@ -158,10 +158,6 @@ module Handsoap
           }
           header
         end
-
-        def self.normalize_header_key(key)
-          key.split("-").map{|s| s.downcase.capitalize }.join("-")
-        end
       end
     end
   end
