@@ -6,16 +6,17 @@ module Handsoap
       class AbstractDriver
         def self.load!
         end
-        
+
         def initialize
           self.class.load!
         end
-        
+
         # Parses a raw http response into a +Response+ or +Part+ object.
         def parse_http_part(headers, body, status = nil, content_type = nil)
           if headers.kind_of? String
             headers = parse_headers(headers)
           end
+          headers = headers.inject({}) {|collect,item| collect[item[0].downcase] = item[1]; collect }
           if content_type.nil? && headers['content-type']
             content_type = headers['content-type'].first
           end

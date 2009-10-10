@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-require 'handsoap/http/drivers/abstract_driver'
 
 module Handsoap
   module Http
@@ -10,32 +9,35 @@ module Handsoap
           require 'em-http'
         end
 
-        def send_http_request(request)          
+        def send_http_request_async(request)
           emr = EventMachine::HttpRequest.new(request.url)
-          
-          # Set credentials. The driver will negotiate the actual scheme
+
           if request.username && request.password
+            # TODO: Verify that this is actually supported?
             request.headers['authorization'] = [request.username, request.password]
           end
-          
-          # I don't think put/delete is actually supported ..
+
           case request.http_method
           when :get
-            deferred = emr.get :head => request.headers
+            emdef = emr.get(:head => request.headers)
           when :post
-            deferred = emr.post :head => request.headers, :body => request.body
+            emdef = emr.post(:head => request.headers, :body => request.body)
           when :put
-            deferred = emr.put :head => request.headers, :body => request.body
+            emdef = emr.put(:head => request.headers, :body => request.body)
           when :delete
-            deferred = emr.delete
+            emdef = emr.delete
           else
             raise "Unsupported request method #{request.http_method}"
           end
-          
-          deferred.callback {
-            deferred.options['handsoap.response'] = parse_http_part(deferred.response_header, deferred.response, deferred.response_header.status)
-          }
-          
+
+          deferred = Handsoap::Deferred.new
+          emdef.callback do
+            http_response = parse_http_part(emdef.response_header, emdef.response, emdef.response_header.status)
+            deferred.trigger_callback http_response
+          end
+          emdef.errback do
+            deferred.trigger_errback emdef
+          end
           deferred
         end
       end

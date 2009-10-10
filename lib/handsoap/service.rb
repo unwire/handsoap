@@ -3,6 +3,7 @@ require 'time'
 require 'handsoap/xml_mason'
 require 'handsoap/xml_query_front'
 require 'handsoap/http'
+require 'handsoap/deferred'
 
 module Handsoap
 
@@ -66,12 +67,24 @@ module Handsoap
       @document = document
       @http_response = http_response
     end
-    def method_missing(method, *args)
+    def method_missing(method, *args, &block)
       if @document.respond_to?(method)
-        @document.__send__ method, *args
+        @document.__send__ method, *args, &block
       else
         super
       end
+    end
+  end
+
+  class AsyncDispatch
+    attr_reader :action, :options, :request_block, :response_block
+    def request(action, options = { :soap_action => :auto }, &block)
+      @action = action
+      @options = options
+      @request_block = block
+    end
+    def response(&block)
+      @response_block = block
     end
   end
 
@@ -115,9 +128,9 @@ module Handsoap
     def self.instance
       @@instance[self.to_s] ||= self.new
     end
-    def self.method_missing(method, *args)
+    def self.method_missing(method, *args, &block)
       if instance.respond_to?(method)
-        instance.__send__ method, *args
+        instance.__send__ method, *args, &block
       else
         super
       end
@@ -158,9 +171,90 @@ module Handsoap
         if block_given?
           yield doc.find(action)
         end
-        dispatch(doc, options[:soap_action])
+        # ready to dispatch
+        headers = {
+          "Content-Type" => "#{self.request_content_type};charset=UTF-8"
+        }
+        headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
+        on_before_dispatch
+        request = make_http_request(self.uri, doc.to_s, headers)
+        driver = Handsoap::Http.drivers[Handsoap.http_driver].new
+        response = driver.send_http_request(request)
+        parse_http_response(response)
       end
     end
+
+    # Async invocation
+    #
+    # Creates an XML document and sends it over HTTP.
+    #
+    # +user_block+ Block from userland
+    def async(user_block, &block) # :yields: Handsoap::AsyncDispatch
+      # Setup userland handlers
+      userland = Handsoap::Deferred.new
+      user_block.call(userland)
+      raise "Missing :callback" unless userland.has_callback?
+      raise "Missing :errback" unless userland.has_errback?
+      # Setup service level handlers
+      dispatcher = Handsoap::AsyncDispatch.new
+      yield dispatcher
+      raise "Missing :request_block" unless dispatcher.request_block
+      raise "Missing :response_block" unless dispatcher.response_block
+      # Done with the external configuration .. let's roll
+      action = dispatcher.action
+      options = dispatcher.options
+      if action #TODO: What if no action ?!?
+        if options.kind_of? String
+          options = { :soap_action => options }
+        end
+        if options[:soap_action] == :auto
+          options[:soap_action] = action.gsub(/^.+:/, "")
+        elsif options[:soap_action] == :none
+          options[:soap_action] = nil
+        end
+        doc = make_envelope do |body|
+          body.add action
+        end
+        dispatcher.request_block.call doc.find(action)
+        # ready to dispatch
+        headers = {
+          "Content-Type" => "#{self.request_content_type};charset=UTF-8"
+        }
+        headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
+        on_before_dispatch
+        request = make_http_request(self.uri, doc.to_s, headers)
+        driver = Handsoap::Http.drivers[Handsoap.http_driver].new
+        if driver.respond_to? :send_http_request_async
+          deferred = driver.send_http_request_async(request)
+        else
+          # Fake async for sync-only drivers
+          deferred = Handsoap::Deferred.new
+          begin
+            deferred.trigger_callback driver.send_http_request(request)
+          rescue
+            deferred.trigger_errback $!
+          end
+        end
+        deferred.callback do |http_response|
+          begin
+            # Parse response
+            response_document = parse_http_response(http_response)
+            # Transform response
+            result = dispatcher.response_block.call(response_document)
+            # Yield to userland code
+            userland.trigger_callback(result)
+          rescue
+            userland.trigger_errback $!
+          end
+        end
+        # Pass driver level errors on
+        deferred.errback do |ex|
+          userland.trigger_errback(ex)
+        end
+      end
+      return nil
+    end
+
     # Hook that is called when a new request document is created.
     #
     # You can override this to add namespaces and other elements that are common to all requests (Such as authentication).
@@ -204,6 +298,7 @@ module Handsoap
     def on_missing_document(response)
       raise "The response is not a valid SOAP envelope"
     end
+
     def debug(message = nil) #:nodoc:
       if @@logger
         if message
@@ -215,8 +310,7 @@ module Handsoap
       end
     end
 
-    # Does the actual HTTP level interaction.
-    def send_http_request(uri, post_body, headers)
+    def make_http_request(uri, post_body, headers)
       request = Handsoap::Http::Request.new(uri, :post)
       headers.each do |key, value|
         request.add_header(key, value)
@@ -226,30 +320,7 @@ module Handsoap
         logger.puts request.inspect
       end
       on_after_create_http_request(request)
-      driver = Handsoap::Http.drivers[Handsoap.http_driver].new
-      driver.send_http_request(request)
-    end
-
-    # Send document and parses the response into a +XmlQueryFront::XmlElement+ (XmlDocument)
-    def dispatch(doc, action)
-      on_before_dispatch
-      headers = {
-        "Content-Type" => "#{self.request_content_type};charset=UTF-8"
-      }
-      headers["SOAPAction"] = action unless action.nil?
-      response = send_http_request(self.uri, doc.to_s, headers)
-      
-      # EventMachine deferred?
-      if response.respond_to? :callback
-        deferred = response
-        deferred.callback {
-          response = deferred.options['handsoap.response']
-          deferred.options['handsoap.soap_response'] = parse_http_response(response)
-        }
-        deferred
-      else
-        parse_http_response(response)
-      end
+      request
     end
 
     # Start the parsing pipe-line.
@@ -343,10 +414,10 @@ module Handsoap
     def self.get_mapping(name)
       @mapping[name] if @mapping
     end
-    def method_missing(method, *args)
+    def method_missing(method, *args, &block)
       action = self.class.get_mapping(method)
       if action
-        invoke(action, *args)
+        invoke(action, *args, &block)
       else
         super
       end

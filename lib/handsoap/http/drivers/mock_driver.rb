@@ -23,14 +23,15 @@ module Handsoap
         def load!
           is_loaded = true
         end
-        
+
         def new
           self
         end
 
         def send_http_request(request)
           @last_request = request
-          parse_http_part(mock[:headers], mock[:content], mock[:status], mock[:content_type])
+          (mock.kind_of? Hash) ?
+            parse_http_part(mock[:headers], mock[:content], mock[:status], mock[:content_type]) : mock
         end
       end
     end

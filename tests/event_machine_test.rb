@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'test/unit'
 
-require 'socket_server.rb'
+require "#{File.dirname(__FILE__)}/socket_server.rb"
 
 require 'eventmachine'
 
@@ -23,15 +23,16 @@ class TestDeferredService < Handsoap::Service
     doc.add_namespace 'ns', 'http://www.wstf.org/docs/scenarios/sc002'
   end
 
-  def echo(text)
-    deferred = invoke('sc002:Echo') do |message|
-      message.add "text", text
+  def echo(text, &block)
+    async(block) do |dispatcher|
+      dispatcher.request("sc002:Echo") do |m|
+        m.add "text", text
+      end
+      dispatcher.response do |response|
+        (response/"//ns:EchoResponse/ns:text").to_s
+      end
     end
-    deferred.callback {
-      soap_response = deferred.options['handsoap.soap_response']
-      deferred.options['echo.text'] = (soap_response.document/"//ns:EchoResponse/ns:text").to_s
-    }
-    deferred
+
   end
 end
 
@@ -63,20 +64,18 @@ Date: Wed, 19 Aug 2009 12:13:45 GMT
 
 OK".gsub(/\n/, "\r\n")
 
-    EventMachine.run {
+    EventMachine.run do
       driver = Handsoap::Http.drivers[self.driver].new
       request = Handsoap::Http::Request.new("http://127.0.0.1:#{TestSocketServer.port}/")
-      deferred = driver.send_http_request(request)
+      deferred = driver.send_http_request_async(request)
 
-      deferred.callback {
-        response = deferred.options['handsoap.response']
-        # TODO: Normalize response headers to match other drivers
-        assert_equal "Ruby", response.headers['SERVER']
+      deferred.callback do |response|
+        assert_equal "Ruby", response.headers['server']
         assert_equal "OK", response.body
         assert_equal 200, response.status
         EventMachine.stop
-      }
-    }
+      end
+    end
   end
 
   def test_service
@@ -92,12 +91,17 @@ Date: Wed, 19 Aug 2009 12:13:45 GMT
 
     Handsoap.http_driver = :event_machine
 
-    EventMachine.run {
-      deferred = TestDeferredService.echo("I am living in the future.")
-      deferred.callback {
-        assert_equal "I am living in the future.", deferred.options['echo.text']
-        EventMachine.stop
-      }
-    }
+    EventMachine.run do
+      TestDeferredService.echo("I am living in the future.") do |d|
+        d.callback do |text|
+          assert_equal "I am living in the future.", text
+          EventMachine.stop
+        end
+        d.errback do |mixed|
+          flunk "Flunked![#{mixed}]"
+          EventMachine.stop
+        end
+      end
+    end
   end
 end

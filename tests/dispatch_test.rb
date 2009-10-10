@@ -13,7 +13,6 @@ class MockResponse < Handsoap::Http::Response
 end
 
 class TestService < Handsoap::Service
-  attr_accessor :mock_http_response
   endpoint :uri => 'http://example.com', :version => 1
 
   def on_create_document(doc)
@@ -27,10 +26,6 @@ class TestService < Handsoap::Service
     doc.add_namespace 'ns', 'http://www.wstf.org/docs/scenarios/sc002'
   end
 
-  def send_http_request(uri, post_body, headers)
-    self.mock_http_response
-  end
-
   def echo(text)
       response = invoke('sc002:Echo') do |message|
       message.add "text", text
@@ -40,7 +35,6 @@ class TestService < Handsoap::Service
 end
 
 class TestServiceLegacyStyle < Handsoap::Service
-  attr_accessor :mock_http_response
   endpoint :uri => 'http://example.com', :version => 1
 
   def on_create_document(doc)
@@ -52,10 +46,6 @@ class TestServiceLegacyStyle < Handsoap::Service
 
   def ns
     { 'ns' => 'http://www.wstf.org/docs/scenarios/sc002' }
-  end
-
-  def send_http_request(uri, post_body, headers)
-    self.mock_http_response
   end
 
   def echo(text)
@@ -76,7 +66,9 @@ class TestOfDispatch < Test::Unit::TestCase
       </sc0:EchoResponse>
    </soap:Body>
 </soap:Envelope>'
-    TestService.mock_http_response = MockResponse.new(200, {"content-type" => ["text/xml;charset=utf-8"]}, body)
+    @mock_http_response = MockResponse.new(200, {"content-type" => ["text/xml;charset=utf-8"]}, body)
+    Handsoap::Http.drivers[:mock] = Handsoap::Http::Drivers::MockDriver.new(@mock_http_response)
+    Handsoap.http_driver = :mock
   end
 
   def test_normal_usecase
@@ -84,21 +76,21 @@ class TestOfDispatch < Test::Unit::TestCase
   end
 
   def test_raises_on_http_error
-    TestService.mock_http_response.status = 404
+    @mock_http_response.status = 404
     assert_raise ::Handsoap::HttpError do
       TestService.echo("Lirum Opossum")
     end
   end
 
   def test_raises_on_invalid_document
-    TestService.mock_http_response.body = "not xml!"
+    @mock_http_response.body = "not xml!"
     assert_raise RuntimeError do
       TestService.echo("Lirum Opossum")
     end
   end
 
   def test_raises_on_fault
-    TestService.mock_http_response.body = '<?xml version="1.0" encoding="UTF-8"?>
+    @mock_http_response.body = '<?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <soap:Fault>
@@ -114,7 +106,6 @@ class TestOfDispatch < Test::Unit::TestCase
   end
 
   def test_legacy_parser_helpers
-    TestServiceLegacyStyle.mock_http_response = TestService.mock_http_response
     assert_equal "Lirum Opossum", TestServiceLegacyStyle.echo("Lirum Opossum")
   end
 
@@ -127,13 +118,13 @@ class TestOfDispatch < Test::Unit::TestCase
       </sc0:EchoResponse>
    </soap:Body>
 </soap:Envelope>'
-    TestService.mock_http_response.parts = [Handsoap::Http::Part.new({}, body, nil)]
+    @mock_http_response.parts = [Handsoap::Http::Part.new({}, body, nil)]
     assert_equal "Lirum Opossum", TestService.echo("Lirum Opossum")
   end
 
   def test_raises_on_no_document
-    TestService.mock_http_response.status = 202
-    TestService.mock_http_response.body = ''
+    @mock_http_response.status = 202
+    @mock_http_response.body = ''
     assert_raise RuntimeError do
       TestService.echo("Lirum Opossum")
     end

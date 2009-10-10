@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+require 'handsoap/http/drivers/abstract_driver'
 require 'handsoap/http/drivers/curb_driver'
 require 'handsoap/http/drivers/event_machine_driver'
 require 'handsoap/http/drivers/http_client_driver'
