@@ -4,8 +4,8 @@ Handsoap
 Install
 ---
 
-    gem sources -a http://gems.github.com
-    sudo gem install unwire-handsoap curb nokogiri
+    gem sources -a http://gemcutter.org
+    sudo gem install handsoap curb nokogiri
 
 What
 ---
