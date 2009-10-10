@@ -91,6 +91,10 @@ Exists="true">http://location_to_thumbnail_for_www.a9.com</aws:Thumbnail>
     doc = create_default_document
     assert_equal "Exists", doc.xpath("//aws:Thumbnail/@Exists").first.node_name
   end
+  def test_get_text_selection_as_string
+    doc = create_default_document
+    assert_equal "http://location_to_thumbnail_for_www.alexa.com", doc.xpath("//aws:Thumbnail[1]/text()").to_s
+  end
   def test_query_with_multiple_prefixes_for_same_namespace
     doc = create_default_document
     assert_equal "3f8ceabd-2d15-47f0-b35e-d52ee868a4a6", doc.xpath("//foo:OperationRequest/aws:RequestId").first.to_s

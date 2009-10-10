@@ -267,10 +267,10 @@ module Handsoap
         @element.to_s
       end
       def to_s
-        if @element.kind_of? REXML::Attribute
-          @element.value
-        else
+        if @element.respond_to? :text
           @element.text
+        else
+          @element.value
         end
       end
     end
