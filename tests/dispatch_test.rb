@@ -32,7 +32,7 @@ class TestService < Handsoap::Service
   end
 
   def echo(text)
-    response = invoke('sc002:Echo') do |message|
+      response = invoke('sc002:Echo') do |message|
       message.add "text", text
     end
     (response.document/"//ns:EchoResponse/ns:text").to_s

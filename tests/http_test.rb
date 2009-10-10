@@ -58,14 +58,16 @@ module AbstractHttpDriverTestCase
 Server: Ruby
 Connection: close
 Content-Type: text/plain
+Content-Length: 2
 Date: Wed, 19 Aug 2009 12:13:45 GMT
 
 OK".gsub(/\n/, "\r\n")
 
-    http = Handsoap::Http.drivers[self.driver]
+    driver = Handsoap::Http.drivers[self.driver].new
     request = Handsoap::Http::Request.new("http://127.0.0.1:#{TestSocketServer.port}/")
-    response = http.send_http_request(request)
+    response = driver.send_http_request(request)
     assert_equal 200, response.status
+    assert_equal ["Ruby"], response.headers['server']
     assert_equal "OK", response.body
   end
 
@@ -84,9 +86,9 @@ Hello World
 
 ".gsub(/\n/, "\r\n")
 
-    http = Handsoap::Http.drivers[self.driver]
+    driver = Handsoap::Http.drivers[self.driver].new
     request = Handsoap::Http::Request.new("http://127.0.0.1:#{TestSocketServer.port}/")
-    response = http.send_http_request(request)
+    response = driver.send_http_request(request)
     assert_equal "Hello World", response.body
   end
 
@@ -116,14 +118,15 @@ class TestOfCurbDriver < Test::Unit::TestCase
 Server: Ruby
 Connection: close
 Content-Type: text/plain
+Content-Length: 9
 Date: Wed, 19 Aug 2009 12:13:45 GMT
 
 okeydokey".gsub(/\n/, "\r\n")
 
-    http = Handsoap::Http.drivers[self.driver]
+    driver = Handsoap::Http.drivers[self.driver].new
     request = Handsoap::Http::Request.new("http://127.0.0.1:#{TestSocketServer.port}/", :post)
     request.body = (0...1099).map{ ('a'..'z').to_a[rand(26)] }.join
-    response = http.send_http_request(request)
+    response = driver.send_http_request(request)
     assert_equal "okeydokey", response.body
   end
 
@@ -155,7 +158,7 @@ Content-ID: <0.urn:uuid:FF5B45112F1A1EA3831249088019647@apache.org>
 --MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646--
 '
     content_io.gsub!(/\n/, "\r\n")
-    parts = Handsoap::Http.parse_multipart(boundary, content_io)
+    parts = Handsoap::Http::Drivers::AbstractDriver.new.parse_multipart(boundary, content_io)
     assert_equal 1, parts.size
     assert parts.first[:body] =~ /^<soap:Envelope/
   end
@@ -171,7 +174,8 @@ foobar' + ((0..10240).map { |i| (rand(27) + 65).chr }.join) + '
 --MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249088019646--
 '
     content_io.gsub!(/\n/, "\r\n")
-    parts = Handsoap::Http.parse_multipart(boundary, content_io)
+    driver = Handsoap::Http::Drivers::AbstractDriver.new
+    parts = driver.parse_multipart(boundary, content_io)
     assert_equal 1, parts.size
     assert parts.first[:body] =~ /^foobar/
   end
@@ -190,8 +194,9 @@ Content-ID: <0.urn:uuid:FF5B45112F1A1EA3831249656297569@apache.org>
 Lorem ipsum
 --MIMEBoundaryurn_uuid_FF5B45112F1A1EA3831249656297568--
 '.gsub(/\n/, "\r\n")
-
-    response = Handsoap::Http.parse_http_part(header, body, 200)
+    
+    driver = Handsoap::Http::Drivers::AbstractDriver.new
+    response = driver.parse_http_part(header, body, 200)
     str = response.inspect do |body|
       "BODY-BEGIN : #{body} : BODY-END"
     end
