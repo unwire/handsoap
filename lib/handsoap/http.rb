@@ -419,7 +419,7 @@ module Handsoap
     def self.parse_headers(raw)
       header = Hash.new([].freeze)
       field = nil
-      raw.gsub(/^(\r\n)+|(\r\n)+$/, '').lines.each {|line|
+      raw.gsub(/^(\r\n)+|(\r\n)+$/, '').each {|line|
         case line
         when /^([A-Za-z0-9!\#$%&'*+\-.^_`|~]+):\s*(.*?)\s*\z/om
           field, value = $1, $2
