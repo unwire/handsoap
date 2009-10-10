@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{handsoap}
-  s.version = "1.0.0"
+  s.version = "1.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Troels Knak-Nielsen"]
-  s.date = %q{2009-10-07}
+  s.date = %q{2009-10-11}
   s.description = %q{Handsoap is a library for creating SOAP clients in Ruby}
   s.email = %q{troelskn@gmail.com}
   s.extra_rdoc_files = [
@@ -23,12 +23,15 @@ Gem::Specification.new do |s|
      "generators/handsoap/templates/DUMMY",
      "lib/handsoap.rb",
      "lib/handsoap/compiler.rb",
+     "lib/handsoap/deferred.rb",
      "lib/handsoap/http.rb",
      "lib/handsoap/http/drivers.rb",
-     "lib/handsoap/http/drivers/curb.rb",
-     "lib/handsoap/http/drivers/httpclient.rb",
+     "lib/handsoap/http/drivers/abstract_driver.rb",
+     "lib/handsoap/http/drivers/curb_driver.rb",
+     "lib/handsoap/http/drivers/event_machine_driver.rb",
+     "lib/handsoap/http/drivers/http_client_driver.rb",
      "lib/handsoap/http/drivers/mock_driver.rb",
-     "lib/handsoap/http/drivers/net_http.rb",
+     "lib/handsoap/http/drivers/net_http_driver.rb",
      "lib/handsoap/http/part.rb",
      "lib/handsoap/http/request.rb",
      "lib/handsoap/http/response.rb",
