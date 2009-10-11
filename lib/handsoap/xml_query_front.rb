@@ -98,6 +98,9 @@ module Handsoap
       def /(expression)
         self.first.xpath(expression)
       end
+      def children
+        self.first.children if self.any?
+      end
       def to_xml
         self.first.to_xml if self.any?
       end
@@ -182,6 +185,10 @@ module Handsoap
       def xpath(expression, ns = nil)
         raise NotImplementedError.new
       end
+      # Returns a +NodeSelection+
+      def children
+        raise NotImplementedError.new
+      end
       # Returns the outer XML for this element.
       def to_xml
         raise NotImplementedError.new
@@ -218,6 +225,9 @@ module Handsoap
         assert_prefixes!(expression, ns)
         NodeSelection.new(@element.find(expression, ns.map{|k,v| "#{k}:#{v}" }).to_a.map{|node| LibXMLDriver.new(node, ns) })
       end
+      def children
+        NodeSelection.new(@element.children.map{|node| LibXMLDriver.new(node) })
+      end
       def [](attribute_name)
         raise ArgumentError.new unless attribute_name.kind_of? String
         @element[attribute_name]
@@ -243,13 +253,20 @@ module Handsoap
     class REXMLDriver
       include XmlElement
       def node_name
-        @element.name
+        if @element.respond_to? :name
+          @element.name
+        else
+          @element.class.name.gsub(/.*::([^:]+)$/, "\\1").downcase
+        end
       end
       def xpath(expression, ns = nil)
         ns = {} if ns.nil?
         ns = @namespaces.merge(ns)
         assert_prefixes!(expression, ns)
         NodeSelection.new(REXML::XPath.match(@element, expression, ns).map{|node| REXMLDriver.new(node, ns) })
+      end
+      def children
+        NodeSelection.new(@element.children.map{|node| REXMLDriver.new(node) })
       end
       def [](attribute_name)
         raise ArgumentError.new unless attribute_name.kind_of? String
@@ -288,6 +305,9 @@ module Handsoap
         ns = @namespaces.merge(ns)
         assert_prefixes!(expression, ns)
         NodeSelection.new(@element.xpath(expression, ns).map{|node| NokogiriDriver.new(node, ns) })
+      end
+      def children
+        NodeSelection.new(@element.children.map{|node| NokogiriDriver.new(node) })
       end
       def [](attribute_name)
         raise ArgumentError.new unless attribute_name.kind_of? String

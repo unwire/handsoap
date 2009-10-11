@@ -181,6 +181,12 @@ Exists="true">http://location_to_thumbnail_for_www.a9.com</aws:Thumbnail>
       assert_equal "foobar", node[:foo]
     end
   end
+  def test_select_children
+    doc = create_default_document
+    node = doc.xpath("//aws:ThumbnailResponse").first
+    result = node.children.map { |node| node.node_name }.join(",")
+    assert_equal "text,Response,text,Response,text,Response,text", result
+  end
 end
 
 class TestOfREXMLDriver < Test::Unit::TestCase
