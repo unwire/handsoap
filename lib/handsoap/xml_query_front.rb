@@ -98,9 +98,6 @@ module Handsoap
       def /(expression)
         self.first.xpath(expression)
       end
-      def children
-        self.first.children if self.any?
-      end
       def to_xml
         self.first.to_xml if self.any?
       end
