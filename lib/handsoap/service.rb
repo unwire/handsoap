@@ -144,6 +144,9 @@ module Handsoap
     def uri
       self.class.uri
     end
+    def http_driver_instance
+      Handsoap::Http.drivers[Handsoap.http_driver].new
+    end
     # Creates an XML document and sends it over HTTP.
     #
     # +action+ is the QName of the rootnode of the envelope.
@@ -178,8 +181,7 @@ module Handsoap
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
         on_before_dispatch
         request = make_http_request(self.uri, doc.to_s, headers)
-        driver = Handsoap::Http.drivers[Handsoap.http_driver].new
-        response = driver.send_http_request(request)
+        response = http_driver_instance.send_http_request(request)
         parse_http_response(response)
       end
     end
@@ -223,7 +225,7 @@ module Handsoap
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
         on_before_dispatch
         request = make_http_request(self.uri, doc.to_s, headers)
-        driver = Handsoap::Http.drivers[Handsoap.http_driver].new
+        driver = self.http_driver_instance
         if driver.respond_to? :send_http_request_async
           deferred = driver.send_http_request_async(request)
         else

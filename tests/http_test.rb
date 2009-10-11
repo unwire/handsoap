@@ -9,6 +9,10 @@ require 'handsoap/http'
 
 module AbstractHttpDriverTestCase
 
+  def setup
+    Handsoap::Http.drivers[self.driver].load!
+  end
+
   def test_connect_to_example_com
     TestSocketServer.reset!
     TestSocketServer.responses << "HTTP/1.1 200 OK
@@ -85,6 +89,63 @@ okeydokey".gsub(/\n/, "\r\n")
     request.body = (0...1099).map{ ('a'..'z').to_a[rand(26)] }.join
     response = driver.send_http_request(request)
     assert_equal "okeydokey", response.body
+  end
+
+  def test_no_retain_cookie_between_requests_by_default
+    driver = Handsoap::Http.drivers[self.driver].new
+
+    TestSocketServer.reset!
+    TestSocketServer.responses << "HTTP/1.1 200 OK
+Server: Ruby
+Connection: close
+Content-Type: text/plain
+Date: Wed, 19 Aug 2009 12:13:45 GMT
+Set-Cookie: SessionId=s5x1rcvuktc3c455hgu23bxx; path=/; HttpOnly
+
+okeydokey".gsub(/\n/, "\r\n")
+
+    request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/", :post)
+    response = driver.send_http_request(request)
+    assert_equal "okeydokey", response.body
+
+    TestSocketServer.responses << "HTTP/1.1 200 OK
+Server: Ruby
+Connection: close
+
+The second body".gsub(/\n/, "\r\n")
+
+    driver.send_http_request(request)
+    # second request must NOT include the Cookie returned in Set-Cookie on the first request
+    assert ! TestSocketServer.requests.last.include?("Cookie: SessionId=s5x1rcvuktc3c455hgu23bxx")
+  end
+
+  def test_retain_cookie_between_requests_when_cookies_enabled
+    driver = Handsoap::Http.drivers[self.driver].new
+    driver.enable_cookies = true  # enable in-built Cookie support in Curb
+
+    TestSocketServer.reset!
+    TestSocketServer.responses << "HTTP/1.1 200 OK
+Server: Ruby
+Connection: close
+Content-Type: text/plain
+Date: Wed, 19 Aug 2009 12:13:45 GMT
+Set-Cookie: SessionId=s5x1rcvuktc3c455hgu23bxx; path=/; HttpOnly
+
+okeydokey".gsub(/\n/, "\r\n")
+
+    request = Handsoap::Http::Request.new("http://localhost:#{TestSocketServer.port}/", :post)
+    response = driver.send_http_request(request)
+    assert_equal "okeydokey", response.body
+
+    TestSocketServer.responses << "HTTP/1.1 200 OK
+Server: Ruby
+Connection: close
+
+The second body".gsub(/\n/, "\r\n")
+
+    driver.send_http_request(request)
+    # second request must include the Cookie returned in Set-Cookie on the first request
+    assert TestSocketServer.requests.last.include?("Cookie: SessionId=s5x1rcvuktc3c455hgu23bxx")
   end
 
 end

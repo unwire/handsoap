@@ -5,12 +5,29 @@ module Handsoap
   module Http
     module Drivers
       class CurbDriver < AbstractDriver
+        attr_accessor :enable_cookies
+
+        def initialize
+          @enable_cookies = false
+        end
+
         def self.load!
           require 'curb'
         end
 
+        def get_curl(url)
+          if @curl
+            @curl.url = url
+          else
+            @curl = ::Curl::Easy.new(url)
+            @curl.enable_cookies = @enable_cookies
+          end
+          @curl
+        end
+        private :get_curl
+
         def send_http_request(request)
-          http_client = Curl::Easy.new(request.url)
+          http_client = get_curl(request.url)
           # Set credentials. The driver will negotiate the actual scheme
           if request.username && request.password
             http_client.userpwd = [request.username, ":", request.password].join
