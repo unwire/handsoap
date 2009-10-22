@@ -4,14 +4,15 @@ begin
   Jeweler::Tasks.new do |gemspec|
     gemspec.name = "handsoap"
     gemspec.summary = "Handsoap is a library for creating SOAP clients in Ruby"
-    gemspec.email = "troelskn@gmail.com"
+    gemspec.email = ["troelskn@gmail.com","frontend@unwire.dk"]
     gemspec.homepage = "http://github.com/unwire/handsoap"
     gemspec.description = gemspec.summary
-    gemspec.authors = ["Troels Knak-Nielsen"]
+    gemspec.authors = ["Troels Knak-Nielsen", "Jimmi Westerberg"]
     gemspec.requirements << "You need to install either \"curb\" or \"httpclient\", using one of:\n    gem install curb\n    gem install httpclient"
     gemspec.requirements << "It is recommended that you install either \"nokogiri\" or \"libxml-ruby\""
     gemspec.files = FileList['lib/**/*.rb', 'generators/handsoap/templates', 'generators/**/*', '[A-Z]*.*'].to_a
   end
+  Jeweler::GemcutterTasks.new
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
 end
