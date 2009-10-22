@@ -25,30 +25,54 @@ module Handsoap
     @xml_query_driver = Handsoap::XmlQueryFront.load_driver!(driver)
   end
 
+  # Wraps SOAP errors in a standard class.
   class Fault < StandardError
     attr_reader :code, :reason, :details
+    
     def initialize(code, reason, details)
       @code = code
       @reason = reason
       @details = details
     end
+    
     def to_s
       "Handsoap::Fault { :code => '#{@code}', :reason => '#{@reason}' }"
     end
+    
     def self.from_xml(node, options = { :namespace => nil })
       if not options[:namespace]
         raise "Missing option :namespace"
       end
+      
       ns = { 'env' => options[:namespace] }
-      fault_code = node.xpath('./env:Code/env:Value', ns).to_s
+      
+      # tries to find SOAP1.2 fault code
+      fault_code = node.xpath("./env:Code/env:Value", ns).to_s
+      
+      # if no SOAP1.2 fault code was found, try the SOAP1.1 way
       unless fault_code
         fault_code = node.xpath('./faultcode', ns).to_s
+        
+        # if fault_code is blank, add the namespace and try again
+        unless fault_code
+          fault_code = node.xpath("//env:faultcode", ns).to_s
+        end
       end
-      reason = node.xpath('./env:Reason/env:Text[1]', ns).to_s
+      
+      # tries to find SOAP1.2 reason
+      reason = node.xpath("./env:Reason/env:Text[1]", ns).to_s
+      
+      # if no SOAP1.2 faultstring was found, try the SOAP1.1 way
       unless reason
         reason = node.xpath('./faultstring', ns).to_s
+        
+        # if reason is blank, add the namespace and try again
+        unless reason
+          reason = node.xpath("//env:faultstring", ns).to_s
+        end
       end
-      details = node.xpath('./detail/*', ns)
+      
+      details = node.xpath('./detail/*', ns)  
       self.new(fault_code, reason, details)
     end
   end
