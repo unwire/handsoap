@@ -28,9 +28,14 @@ module Handsoap
                          else
                            raise "Unsupported request method #{request.http_method}"
                          end
+                         
           http_client = Net::HTTP.new(url.host, url.port)
+          
+          #http_client.read_timeout = 120
+          http_client.read_timeout = Handsoap.timeout
+          
           http_client.use_ssl = true if url.scheme == 'https'
-          http_client.read_timeout = 120
+          
           if request.username && request.password
             # TODO: http://codesnippets.joyent.com/posts/show/1075
             http_request.basic_auth request.username, request.password

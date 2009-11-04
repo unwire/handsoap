@@ -24,6 +24,17 @@ module Handsoap
   def self.xml_query_driver=(driver)
     @xml_query_driver = Handsoap::XmlQueryFront.load_driver!(driver)
   end
+    
+  # Sets the timeout
+  def self.timeout=(timeout)
+    @timeout = timeout
+  end
+
+  # fetches the timeout
+  # the default timeout is set to 60seconds  
+  def self.timeout
+    @timeout || (self.timeout = 60)
+  end
 
   # Wraps SOAP errors in a standard class.
   class Fault < StandardError
