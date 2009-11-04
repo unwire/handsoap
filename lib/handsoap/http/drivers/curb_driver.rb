@@ -22,7 +22,6 @@ module Handsoap
             @curl = ::Curl::Easy.new(url)
             @curl.timeout = Handsoap.timeout
             @curl.enable_cookies = @enable_cookies
-            @curl.verbose = true
           end
           @curl
         end
