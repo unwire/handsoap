@@ -203,7 +203,11 @@ module Handsoap
         elsif options[:soap_action] == :none
           options[:soap_action] = nil
         end
-        doc = make_envelope do |body|
+        doc = make_envelope do |body,header|
+          options[:soap_header].each_pair do |k,v|
+            header.add k,v
+          end
+          
           body.add action
         end
         if block_given?
@@ -215,7 +219,7 @@ module Handsoap
         }
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
         on_before_dispatch
-        request = make_http_request(self.uri, doc.to_s, headers)
+        request = make_http_request(self.uri, doc.to_s, headers,options[:http_options])
         response = http_driver_instance.send_http_request(request)
         parse_http_response(response)
       end
@@ -347,8 +351,13 @@ module Handsoap
       end
     end
 
-    def make_http_request(uri, post_body, headers)
+    def make_http_request(uri, post_body, headers,http_options=nil)
       request = Handsoap::Http::Request.new(uri, :post)
+
+      # SSL CA AND CLIENT CERTIFICATES
+      request.set_trust_ca_file(http_options[:trust_ca_file])
+      request.set_client_cert_files(http_options[:client_cert_file],http_options[:client_cert_key_file])
+      
       headers.each do |key, value|
         request.add_header(key, value)
       end
@@ -399,7 +408,7 @@ module Handsoap
       self.class.fire_on_create_document doc # deprecated .. use instance method
       on_create_document(doc)
       if block_given?
-        yield doc.find("Body")
+        yield doc.find("Body"),doc.find("Header")
       end
       return doc
     end
