@@ -16,6 +16,8 @@ module Handsoap
             domain = request.url.match(/^(http(s?):\/\/[^\/]+\/)/)[1]
             http_client.set_auth(domain, request.username, request.password)
           end
+          http_client.ssl_config.set_trust_ca(request.trust_ca_file) if request.trust_ca_file
+          http_client.ssl_config.set_client_cert_file(request.client_cert_file,request.client_cert_key_file) if request.client_cert_file and request.client_cert_key_file
           # pack headers
           headers = request.headers.inject([]) do |arr, (k,v)|
             arr + v.map {|x| [k,x] }
