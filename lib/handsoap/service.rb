@@ -35,6 +35,27 @@ module Handsoap
   def self.timeout
     @timeout || (self.timeout = 60)
   end
+  
+  # Tell Handsoap to follow redirects
+  def self.follow_redirects!
+    @follow_redirects = true
+  end
+  
+  # Check whether Handsoap should follow redirects
+  def self.follow_redirects?
+    @follow_redirects || false
+  end
+  
+  # Sets the max number of redirects
+  def self.max_redirects=(max_redirects)
+    @max_redirects = max_redirects
+  end
+
+  # Fetches the max number of redirects
+  # The default is 1
+  def self.max_redirects
+    @max_redirects || (self.max_redirects = 1)
+  end
 
   # Wraps SOAP errors in a standard class.
   class Fault < StandardError
