@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{handsoap}
-  s.version = "1.1.4"
+  s.version = "1.1.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Troels Knak-Nielsen", "Jimmi Westerberg"]
-  s.date = %q{2009-11-04}
+  s.date = %q{2010-01-12}
   s.description = %q{Handsoap is a library for creating SOAP clients in Ruby}
   s.email = ["troelskn@gmail.com", "frontend@unwire.dk"]
   s.extra_rdoc_files = [
