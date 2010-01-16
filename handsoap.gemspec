@@ -3,6 +3,7 @@
 # Instead, edit Jeweler::Tasks in Rakefile, and run the gemspec command
 # -*- encoding: utf-8 -*-
 
+
 Gem::Specification.new do |s|
   s.name = %q{handsoap}
   s.version = "1.1.6"
