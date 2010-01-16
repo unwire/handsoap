@@ -225,8 +225,10 @@ module Handsoap
           options[:soap_action] = nil
         end
         doc = make_envelope do |body,header|
-          options[:soap_header].each_pair do |k,v|
-            header.add k,v
+          if options[:soap_header]
+            options[:soap_header].each_pair do |k,v|
+              header.add k,v
+            end
           end
           
           body.add action
@@ -376,8 +378,10 @@ module Handsoap
       request = Handsoap::Http::Request.new(uri, :post)
 
       # SSL CA AND CLIENT CERTIFICATES
-      request.set_trust_ca_file(http_options[:trust_ca_file])
-      request.set_client_cert_files(http_options[:client_cert_file],http_options[:client_cert_key_file])
+      if http_options
+        request.set_trust_ca_file(http_options[:trust_ca_file]) if http_options[:trust_ca_file]
+        request.set_client_cert_files(http_options[:client_cert_file],http_options[:client_cert_key_file]) if http_options[:client_cert_file] && http_options[:client_cert_key_file]
+      end
       
       headers.each do |key, value|
         request.add_header(key, value)
