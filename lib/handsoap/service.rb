@@ -226,12 +226,15 @@ module Handsoap
         end
         doc = make_envelope do |body,header|
           if options[:soap_header]
-            options[:soap_header].each_pair do |k,v|
-              header.add k,v
-            end
+            iterate_hash_array(header, options[:soap_header])
           end
           
-          body.add action
+          if options[:soap_body]
+            action_hash = { action => options[:soap_body] }
+            iterate_hash_array(body, action_hash)
+          else
+            body.add(action)
+          end
         end
         if block_given?
           yield doc.find(action)
@@ -242,11 +245,14 @@ module Handsoap
         }
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
         on_before_dispatch
+        puts doc.to_s
         request = make_http_request(self.uri, doc.to_s, headers,options[:http_options])
         response = http_driver_instance.send_http_request(request)
         parse_http_response(response)
       end
     end
+
+
 
     # Async invocation
     #
@@ -317,6 +323,25 @@ module Handsoap
         end
       end
       return nil
+    end
+
+
+
+    #Used to iterate over a Hash, that can include Hash, Array or String/Float/Integer etc and insert it in the correct element.
+    def iterate_hash_array(element, hash_array)
+      hash_array.each {|hash| iterate_hash_array(element, hash)} if hash_array.is_a?(Array)
+      hash_array.each do |name,value|
+        if value.is_a?(Hash)
+          element.add(name){|subelement| iterate_hash_array(subelement, value)}
+        elsif value.is_a?(Array)
+          value.each do |item|
+            element.add(name, iterate_hash_array(element,item)) if item.is_a?(Hash)
+          end
+        else
+          puts "#{name.to_s}: #{name.class.to_s} - #{value.to_s}:#{value.class.to_s}"
+          element.add name, value.to_s
+        end
+      end
     end
 
     # Hook that is called when a new request document is created.
