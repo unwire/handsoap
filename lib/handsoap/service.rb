@@ -236,7 +236,6 @@ module Handsoap
             body.add(action)
           end
         end
-        puts doc.to_s
         if block_given?
           yield doc.find(action)
         end
@@ -246,7 +245,6 @@ module Handsoap
         }
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
         on_before_dispatch
-        puts doc.to_s
         request = make_http_request(self.uri, doc.to_s, headers,options[:http_options])
         response = http_driver_instance.send_http_request(request)
         parse_http_response(response)
@@ -340,7 +338,6 @@ module Handsoap
             end
           end
         else
-          puts "#{name.to_s}: #{name.class.to_s} - #{value.to_s}:#{value.class.to_s}"
           element.add name, value.to_s
         end
       end
