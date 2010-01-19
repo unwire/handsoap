@@ -236,6 +236,7 @@ module Handsoap
             body.add(action)
           end
         end
+        puts doc.to_s
         if block_given?
           yield doc.find(action)
         end
@@ -329,13 +330,14 @@ module Handsoap
 
     #Used to iterate over a Hash, that can include Hash, Array or String/Float/Integer etc and insert it in the correct element.
     def iterate_hash_array(element, hash_array)
-      hash_array.each {|hash| iterate_hash_array(element, hash)} if hash_array.is_a?(Array)
       hash_array.each do |name,value|
         if value.is_a?(Hash)
           element.add(name){|subelement| iterate_hash_array(subelement, value)}
         elsif value.is_a?(Array)
-          value.each do |item|
-            element.add(name, iterate_hash_array(element,item)) if item.is_a?(Hash)
+          element.add(name) do |subelement|
+            value.each do |item|
+              iterate_hash_array(subelement, item) if item.is_a?(Hash)
+            end
           end
         else
           puts "#{name.to_s}: #{name.class.to_s} - #{value.to_s}:#{value.class.to_s}"

@@ -15,9 +15,9 @@ module Handsoap
       def initialize
         @namespaces = {}
       end
-      def add(node_name, value = nil, *flags) # :yields: Handsoap::XmlMason::Element
+      def add(node_name, value = nil, options = {}) # :yields: Handsoap::XmlMason::Element
         prefix, name = parse_ns(node_name)
-        node = append_child Element.new(self, prefix, name, value, flags)
+        node = append_child Element.new(self, prefix, name, value, options)
         if block_given?
           yield node
         end
@@ -105,7 +105,7 @@ module Handsoap
     end
 
     class Element < Node
-      def initialize(parent, prefix, node_name, value = nil, flags = []) # :yields: Handsoap::XmlMason::Element
+      def initialize(parent, prefix, node_name, value = nil, options = {}) # :yields: Handsoap::XmlMason::Element
         super()
 #         if prefix.to_s == ""
 #           raise "missing prefix"
@@ -115,8 +115,11 @@ module Handsoap
         @node_name = node_name
         @children = []
         @attributes = {}
+        if options[:attributes]
+          @attributes = options[:attributes]
+        end
         if not value.nil?
-          set_value value.to_s, *flags
+          set_value value.to_s, options
         end
         if block_given?
           yield self
@@ -142,14 +145,14 @@ module Handsoap
       end
       # Sets the inner text of this element.
       #
-      # By default the string is escaped, but you can pass the flag :raw to inject XML.
+      # By default the string is escaped, but you can pass the option flag :raw to inject XML.
       #
       # You usually won't need to call this method, but will rather use +add+
-      def set_value(value, *flags)
+      def set_value(value, options = {})
         if @children.length > 0
           raise "Element already has children. Can't set value"
         end
-        if flags && flags.include?(:raw)
+        if options && options.include?(:raw)
           @children = [RawContent.new(value)]
         else
           @children = [TextNode.new(value)]
