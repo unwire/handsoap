@@ -328,6 +328,7 @@ module Handsoap
 
     #Used to iterate over a Hash, that can include Hash, Array or String/Float/Integer etc and insert it in the correct element.
     def iterate_hash_array(element, hash_array)
+      hash_array.each {|hash| iterate_hash_array(element, hash) } if hash_array.is_a?(Array)
       hash_array.each do |name,value|
         if value.is_a?(Hash)
           element.add(name){|subelement| iterate_hash_array(subelement, value)}
