@@ -3,16 +3,15 @@
 # Instead, edit Jeweler::Tasks in Rakefile, and run the gemspec command
 # -*- encoding: utf-8 -*-
 
-
 Gem::Specification.new do |s|
-  s.name = %q{pgericson-handsoap}
-  s.version = "1.1.10"
+  s.name = %q{handsoap}
+  s.version = "1.1.7"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Troels Knak-Nielsen", "Jimmi Westerberg", "Peter Ericson"]
-  s.date = %q{2010-02-05}
+  s.authors = ["Troels Knak-Nielsen", "Jimmi Westerberg"]
+  s.date = %q{2010-02-11}
   s.description = %q{Handsoap is a library for creating SOAP clients in Ruby}
-  s.email = ["troelskn@gmail.com", "frontend@unwire.dk", "pg.ericson@gmail.com"]
+  s.email = ["troelskn@gmail.com", "frontend@unwire.dk"]
   s.extra_rdoc_files = [
     "README.markdown"
   ]
