@@ -39,6 +39,10 @@ module Handsoap
           if request.username && request.password
             http_client.userpwd = [request.username, ":", request.password].join
           end
+          http_client.cacert = request.trust_ca_file if request.trust_ca_file
+          http_client.cert = request.client_cert_file if request.client_cert_file
+          # I have submitted a patch for this to curb, but it's not yet supported. If you get errors, try upgrading curb.
+          http_client.cert_key = request.client_cert_key_file if request.client_cert_key_file
           # pack headers
           headers = request.headers.inject([]) do |arr, (k,v)|
             arr + v.map {|x| "#{k}: #{x}" }
