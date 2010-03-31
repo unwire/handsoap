@@ -214,7 +214,7 @@ module Handsoap
     # +String+ sends a SOAPAction http header.
     #
     # +nil+ sends no SOAPAction http header.
-    def invoke(action, options = { :soap_action => :auto }, &block) # :yields: Handsoap::XmlMason::Element
+    def invoke(action, options = { :soap_action => :auto, :http_options => nil }, &block) # :yields: Handsoap::XmlMason::Element
       if action
         if options.kind_of? String
           options = { :soap_action => options }
@@ -245,7 +245,7 @@ module Handsoap
         }
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
         on_before_dispatch
-        request = make_http_request(self.uri, doc.to_s, headers,options[:http_options])
+        request = make_http_request(self.uri, doc.to_s, headers, options[:http_options])
         response = http_driver_instance.send_http_request(request)
         parse_http_response(response)
       end
@@ -399,13 +399,13 @@ module Handsoap
       end
     end
 
-    def make_http_request(uri, post_body, headers,http_options=nil)
+    def make_http_request(uri, post_body, headers, http_options=nil)
       request = Handsoap::Http::Request.new(uri, :post)
 
       # SSL CA AND CLIENT CERTIFICATES
       if http_options
         request.set_trust_ca_file(http_options[:trust_ca_file]) if http_options[:trust_ca_file]
-        request.set_client_cert_files(http_options[:client_cert_file],http_options[:client_cert_key_file]) if http_options[:client_cert_file] && http_options[:client_cert_key_file]
+        request.set_client_cert_files(http_options[:client_cert_file], http_options[:client_cert_key_file]) if http_options[:client_cert_file] && http_options[:client_cert_key_file]
       end
       
       headers.each do |key, value|
