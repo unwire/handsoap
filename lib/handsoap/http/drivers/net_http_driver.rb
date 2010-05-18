@@ -32,6 +32,7 @@ module Handsoap
           http_client = Net::HTTP.new(url.host, url.port)
           
           #http_client.read_timeout = 120
+          http_client.open_timeout = Handsoap.timeout
           http_client.read_timeout = Handsoap.timeout
           
           http_client.use_ssl = true if url.scheme == 'https'
