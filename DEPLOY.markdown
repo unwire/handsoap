@@ -7,4 +7,4 @@ To make a release, do:
     rake build
     gem push pkg/handsoap-*.gem
 
-You need `jeweleer` and `gemcutter`, as well as login credentials for gemcutter.
+You need `jeweler` and `gemcutter`, as well as login credentials for gemcutter.
