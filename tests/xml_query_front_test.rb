@@ -87,6 +87,14 @@ Exists="true">http://location_to_thumbnail_for_www.a9.com</aws:Thumbnail>
     doc = create_default_document
     assert_equal "Thumbnail", doc.xpath("//aws:Response/aws:ThumbnailResult/*").first.node_name
   end
+  def test_get_node_namespace
+    doc = create_default_document
+    assert_equal "http://ast.amazonaws.com/doc/2006-05-15/", doc.xpath("//aws:Response/aws:ThumbnailResult/*").first.node_namespace
+  end
+  def test_get_nil_node_namespace
+    doc = create_default_document
+    assert_equal nil, doc.xpath("//entity-test").first.node_namespace
+  end
   def test_get_attribute_name
     doc = create_default_document
     assert_equal "Exists", doc.xpath("//aws:Thumbnail/@Exists").first.node_name

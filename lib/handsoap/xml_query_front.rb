@@ -92,6 +92,9 @@ module Handsoap
       def node_name
         self.first.node_name if self.any?
       end
+      def node_namespace
+        self.first.node_namespace if self.any?
+      end
       def xpath(expression, ns = nil)
         self.first.xpath(expression, ns)
       end
@@ -172,6 +175,11 @@ module Handsoap
       def node_name
         raise NotImplementedError.new
       end
+      # Returns the node namespace uri of the current element if any, +nil+ otherwise.
+      # Result returned for attribute nodes varies for different drivers, currently.
+      def node_namespace
+        raise NotImplementedError.new
+      end
       # Queries the document with XPath, relative to the current element.
       #
       # +ns+ Should be a Hash of prefix => namespace
@@ -216,6 +224,13 @@ module Handsoap
       def node_name
         @element.name
       end
+      def node_namespace
+        if @element.respond_to? :namespaces
+          if namespace = @element.namespaces.namespace
+            namespace.href
+          end
+        end
+      end
       def xpath(expression, ns = nil)
         ns = {} if ns.nil?
         ns = @namespaces.merge(ns)
@@ -255,6 +270,13 @@ module Handsoap
         else
           @element.class.name.gsub(/.*::([^:]+)$/, "\\1").downcase
         end
+      end
+      def node_namespace
+        if @element.respond_to? :namespace
+          namespace = @element.namespace
+          return if namespace == ''
+        end
+        namespace
       end
       def xpath(expression, ns = nil)
         ns = {} if ns.nil?
@@ -296,6 +318,9 @@ module Handsoap
       include XmlElement
       def node_name
         @element.name
+      end
+      def node_namespace
+        @element.namespace.href if @element.namespace
       end
       def xpath(expression, ns = nil)
         ns = {} if ns.nil?
