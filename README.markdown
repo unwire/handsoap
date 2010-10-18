@@ -93,6 +93,15 @@ For parsing XML, Handsoap defaults to use [Nokogiri](http://github.com/tenderlov
 
 Finally, there is a library for generating XML, which you'll use when mapping from Ruby to SOAP. It's quite similar to [Builder](http://builder.rubyforge.org/), but is tailored towards being used for writing SOAP-messages. The name of this library is `XmlMason` and it is included/part of Handsoap.
 
+Maintainers & Contributors
+---
+
+Handsoap is maintained by [Unwire A/S](http://www.unwire.dk), namely [Troels Knak-Nielsen](http://github.com/troelskn) and [Jimmi Westerberg](http://github.com/jimmiw), with the help of many other contributors.
+
+Use the git command below to see a list of them all. (GIT command was found at formtastic)
+
+  git shortlog -n -s --no-merges
+
 License
 ---
 

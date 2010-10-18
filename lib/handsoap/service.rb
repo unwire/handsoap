@@ -35,6 +35,27 @@ module Handsoap
   def self.timeout
     @timeout || (self.timeout = 60)
   end
+  
+  # Tell Handsoap to follow redirects
+  def self.follow_redirects!
+    @follow_redirects = true
+  end
+  
+  # Check whether Handsoap should follow redirects
+  def self.follow_redirects?
+    @follow_redirects || false
+  end
+  
+  # Sets the max number of redirects
+  def self.max_redirects=(max_redirects)
+    @max_redirects = max_redirects
+  end
+
+  # Fetches the max number of redirects
+  # The default is 1
+  def self.max_redirects
+    @max_redirects || (self.max_redirects = 1)
+  end
 
   # Wraps SOAP errors in a standard class.
   class Fault < StandardError
@@ -193,7 +214,7 @@ module Handsoap
     # +String+ sends a SOAPAction http header.
     #
     # +nil+ sends no SOAPAction http header.
-    def invoke(action, options = { :soap_action => :auto }, &block) # :yields: Handsoap::XmlMason::Element
+    def invoke(action, options = { :soap_action => :auto, :http_options => nil }, &block) # :yields: Handsoap::XmlMason::Element
       if action
         if options.kind_of? String
           options = { :soap_action => options }
@@ -204,11 +225,16 @@ module Handsoap
           options[:soap_action] = nil
         end
         doc = make_envelope do |body,header|
-          options[:soap_header].each_pair do |k,v|
-            header.add k,v
+          if options[:soap_header]
+            iterate_hash_array(header, options[:soap_header])
           end
           
-          body.add action
+          if options[:soap_body]
+            action_hash = { action => options[:soap_body] }
+            iterate_hash_array(body, action_hash)
+          else
+            body.add(action)
+          end
         end
         if block_given?
           yield doc.find(action)
@@ -219,11 +245,13 @@ module Handsoap
         }
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
         on_before_dispatch
-        request = make_http_request(self.uri, doc.to_s, headers,options[:http_options])
+        request = make_http_request(self.uri, doc.to_s, headers, options[:http_options])
         response = http_driver_instance.send_http_request(request)
         parse_http_response(response)
       end
     end
+
+
 
     # Async invocation
     #
@@ -296,6 +324,26 @@ module Handsoap
       return nil
     end
 
+
+
+    #Used to iterate over a Hash, that can include Hash, Array or String/Float/Integer etc and insert it in the correct element.
+    def iterate_hash_array(element, hash_array)
+      hash_array.each {|hash| iterate_hash_array(element, hash) } if hash_array.is_a?(Array)
+      hash_array.each do |name,value|
+        if value.is_a?(Hash)
+          element.add(name){|subelement| iterate_hash_array(subelement, value)}
+        elsif value.is_a?(Array)
+          element.add(name) do |subelement|
+            value.each do |item|
+              iterate_hash_array(subelement, item) if item.is_a?(Hash)
+            end
+          end
+        else
+          element.add name, value.to_s
+        end
+      end
+    end
+
     # Hook that is called when a new request document is created.
     #
     # You can override this to add namespaces and other elements that are common to all requests (Such as authentication).
@@ -351,12 +399,14 @@ module Handsoap
       end
     end
 
-    def make_http_request(uri, post_body, headers,http_options=nil)
+    def make_http_request(uri, post_body, headers, http_options=nil)
       request = Handsoap::Http::Request.new(uri, :post)
 
       # SSL CA AND CLIENT CERTIFICATES
-      request.set_trust_ca_file(http_options[:trust_ca_file])
-      request.set_client_cert_files(http_options[:client_cert_file],http_options[:client_cert_key_file])
+      if http_options
+        request.set_trust_ca_file(http_options[:trust_ca_file]) if http_options[:trust_ca_file]
+        request.set_client_cert_files(http_options[:client_cert_file], http_options[:client_cert_key_file]) if http_options[:client_cert_file] && http_options[:client_cert_key_file]
+      end
       
       headers.each do |key, value|
         request.add_header(key, value)
