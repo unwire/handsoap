@@ -5,7 +5,7 @@ module Handsoap
 
     # Represents a HTTP Request.
     class Request
-      attr_reader :url, :http_method, :headers, :body, :username, :password, :trust_ca_file, :client_cert_file, :client_cert_key_file
+      attr_reader :url, :http_method, :headers, :body, :username, :password, :trust_ca_file, :client_cert_file, :client_cert_key_file,:ssl_verify_mode
       attr_writer :body, :http_method
       def initialize(url, http_method = :get)
         @url = url
@@ -17,6 +17,7 @@ module Handsoap
         @trust_ca_file = nil
         @client_cert_file = nil
         @client_cert_key_file = nil
+        @ssl_verify_mode = nil
       end
       def set_trust_ca_file(ca_file)
         @trust_ca_file = ca_file
@@ -24,6 +25,9 @@ module Handsoap
       def set_client_cert_files(client_cert_file,client_cert_key_file)
         @client_cert_file = client_cert_file
         @client_cert_key_file = client_cert_key_file
+      end
+      def set_ssl_verify_mode(mode)
+        @ssl_verify_mode = mode
       end
       def set_auth(username, password)
         @username = username

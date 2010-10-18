@@ -18,6 +18,7 @@ module Handsoap
           end
           http_client.ssl_config.set_trust_ca(request.trust_ca_file) if request.trust_ca_file
           http_client.ssl_config.set_client_cert_file(request.client_cert_file,request.client_cert_key_file) if request.client_cert_file and request.client_cert_key_file
+          http_client.ssl_config.verify_mode = request.ssl_verify_mode if request.ssl_verify_mode
           # pack headers
           headers = request.headers.inject([]) do |arr, (k,v)|
             arr + v.map {|x| [k,x] }
