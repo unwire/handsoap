@@ -241,7 +241,7 @@ module Handsoap
         end
         # ready to dispatch
         headers = {
-          "Content-Type" => "#{self.request_content_type};charset=UTF-8"
+          "Content-Type" => "#{self.request_content_type}; charset=UTF-8"
         }
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
         on_before_dispatch
@@ -287,7 +287,7 @@ module Handsoap
         dispatcher.request_block.call doc.find(action)
         # ready to dispatch
         headers = {
-          "Content-Type" => "#{self.request_content_type};charset=UTF-8"
+          "Content-Type" => "#{self.request_content_type}; charset=UTF-8"
         }
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
         on_before_dispatch
