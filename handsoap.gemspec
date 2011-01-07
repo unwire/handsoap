@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{handsoap}
-  s.version = "1.1.7"
+  s.version = "1.1.8"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Troels Knak-Nielsen", "Jimmi Westerberg"]
-  s.date = %q{2010-02-11}
+  s.date = %q{2011-01-07}
   s.description = %q{Handsoap is a library for creating SOAP clients in Ruby}
   s.email = ["troelskn@gmail.com", "frontend@unwire.dk"]
   s.extra_rdoc_files = [
@@ -45,7 +45,7 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.requirements = ["You need to install either \"curb\" or \"httpclient\", using one of:\n    gem install curb\n    gem install httpclient", "It is recommended that you install either \"nokogiri\" or \"libxml-ruby\""]
-  s.rubygems_version = %q{1.3.5}
+  s.rubygems_version = %q{1.3.6}
   s.summary = %q{Handsoap is a library for creating SOAP clients in Ruby}
 
   if s.respond_to? :specification_version then
