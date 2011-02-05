@@ -214,7 +214,7 @@ module Handsoap
     # +String+ sends a SOAPAction http header.
     #
     # +nil+ sends no SOAPAction http header.
-    def invoke(action, options = { :soap_action => :auto, :http_options => nil }, &block) # :yields: Handsoap::XmlMason::Element
+    def invoke(action, options = { :soap_action => :auto, :http_options => nil }) # :yields: Handsoap::XmlMason::Element
       if action
         if options.kind_of? String
           options = { :soap_action => options }
@@ -236,9 +236,7 @@ module Handsoap
             body.add(action)
           end
         end
-        if block_given?
-          yield doc.find(action)
-        end
+        yield doc.find(action)
         # ready to dispatch
         headers = {
           "Content-Type" => "#{self.request_content_type}; charset=UTF-8"
