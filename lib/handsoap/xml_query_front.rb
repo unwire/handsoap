@@ -86,6 +86,9 @@ module Handsoap
       def to_date
         self.first.to_date if self.any?
       end
+      def to_big_decimal(decimal_places = 2)
+        self.first.to_big_decimal(decimal_places) if self.any?
+      end
       def to_s
         self.first.to_s if self.any?
       end
@@ -158,6 +161,14 @@ module Handsoap
         t = self.to_s
         return if t.nil?
         Time.iso8601(t)
+      end
+      # Returns the value of the element as an instance of BigDecimal
+      #
+      # See +to_s+
+      def to_big_decimal(decimal_places = 2)
+        t = self.to_s
+        return if t.nil?
+        BigDecimal.new t, decimal_places
       end
       # Returns the inner text content of this element, or the value (if it's an attr or textnode).
       #

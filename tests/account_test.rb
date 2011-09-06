@@ -56,7 +56,8 @@ class AccountService < Handsoap::Service
                 :blacklisted => (node/"@blacklisted").to_boolean,
                 :application_id => (node/"@application-id").to_i,
                 :amount_used => (node/"@amount-used").to_i,
-                :account_id => (node/"@account-id").to_i
+                :account_id => (node/"@account-id").to_i,
+                :credit => (node/"@credit").to_big_decimal
   end
 end
 
@@ -71,6 +72,7 @@ class Account
     @buy_attempts = values[:buy_attempts]
     @blacklisted = values[:blacklisted] || false
     @amount_used = values[:amount_used]
+    @credit = values[:credit]
   end
   def blacklisted?
     !! @blacklisted
@@ -91,7 +93,7 @@ Server: Apache-Coyote/1.1'.gsub(/\n/, "\r\n")
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <ns1:GetAccountByIdResponse xmlns:ns1="http://schema.example.org/AccountService">
-      <account msisdn="12345678" account-id="1" created="2009-08-03T11:28:26+02:00" buy-attempts="42" blacklisted="true" application-id="1" amount-used="123456"/>
+      <account msisdn="12345678" account-id="1" created="2009-08-03T11:28:26+02:00" buy-attempts="42" blacklisted="true" application-id="1" amount-used="123456" credit="24.95"/>
     </ns1:GetAccountByIdResponse>
   </soap:Body>
 </soap:Envelope>'
