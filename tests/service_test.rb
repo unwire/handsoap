@@ -10,7 +10,7 @@ class TestFollowRedirects < Test::Unit::TestCase
     Handsoap.follow_redirects!
     assert Handsoap.follow_redirects?
   end
-  
+
   def test_max_redirects
     assert_equal Handsoap.max_redirects, 1
     Handsoap.max_redirects = 10

@@ -63,9 +63,9 @@ module Handsoap
           end
         end
       end
-      
+
     private
-      
+
       def inspect_head
         "--- Part ---\n"
       end
