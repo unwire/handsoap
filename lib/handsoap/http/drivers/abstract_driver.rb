@@ -64,8 +64,14 @@ module Handsoap
           boundary_size = boundary.size + "\r\n".size
           content_length -= boundary_size
           status = content_io.read(boundary_size)
+          
           if nil == status
             raise EOFError, "no content body"
+          elsif "\r\n" + boundary == status
+            extra = content_io.read("\r\n".size)
+            unless extra == "\r\n"
+              raise EOFError, "parse error while reading boundary"
+            end
           elsif boundary + "\r\n" != status
             raise EOFError, "bad content body"
           end
