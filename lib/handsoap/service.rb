@@ -406,6 +406,7 @@ module Handsoap
       if http_options
         request.set_trust_ca_file(http_options[:trust_ca_file]) if http_options[:trust_ca_file]
         request.set_client_cert_files(http_options[:client_cert_file], http_options[:client_cert_key_file]) if http_options[:client_cert_file] && http_options[:client_cert_key_file]
+        request.set_ssl_verify_mode(http_options[:ssl_verify_mode]) if http_options[:ssl_verify_mode]
       end
       
       headers.each do |key, value|
