@@ -22,6 +22,9 @@ module Handsoap
             @curl                 = ::Curl::Easy.new(url)
             @curl.timeout         = Handsoap.timeout
             @curl.enable_cookies  = @enable_cookies
+
+            # enables both deflate and gzip compression of responses
+            @curl.encoding = ''
             
             if Handsoap.follow_redirects?
               @curl.follow_location = true
