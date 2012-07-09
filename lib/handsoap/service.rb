@@ -214,41 +214,39 @@ module Handsoap
     # +String+ sends a SOAPAction http header.
     #
     # +nil+ sends no SOAPAction http header.
-    def invoke(action, options = { :soap_action => :auto, :http_options => nil }, &block) # :yields: Handsoap::XmlMason::Element
-      if action
-        if options.kind_of? String
-          options = { :soap_action => options }
-        end
-        if options[:soap_action] == :auto
-          options[:soap_action] = action.gsub(/^.+:/, "")
-        elsif options[:soap_action] == :none
-          options[:soap_action] = nil
-        end
-        doc = make_envelope do |body,header|
-          if options[:soap_header]
-            iterate_hash_array(header, options[:soap_header])
-          end
-          
-          if options[:soap_body]
-            action_hash = { action => options[:soap_body] }
-            iterate_hash_array(body, action_hash)
-          else
-            body.add(action)
-          end
-        end
-        if block_given?
-          yield doc.find(action)
-        end
-        # ready to dispatch
-        headers = {
-          "Content-Type" => "#{self.request_content_type}; charset=UTF-8"
-        }
-        headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
-        on_before_dispatch
-        request = make_http_request(self.uri, doc.to_s, headers, options[:http_options])
-        response = http_driver_instance.send_http_request(request)
-        parse_http_response(response)
+    def invoke(action, options = { :soap_action => :auto, :http_options => nil }) # :yields: Handsoap::XmlMason::Element
+      if options.kind_of? String
+        options = { :soap_action => options }
       end
+      if options[:soap_action] == :auto
+        options[:soap_action] = action.gsub(/^.+:/, "")
+      elsif options[:soap_action] == :none
+        options[:soap_action] = nil
+      end
+      doc = make_envelope do |body,header|
+        if options[:soap_header]
+          iterate_hash_array(header, options[:soap_header])
+        end
+
+        if options[:soap_body]
+          action_hash = { action => options[:soap_body] }
+          iterate_hash_array(body, action_hash)
+        else
+          body.add(action)
+        end
+      end
+      if block_given?
+        yield doc.find(action)
+      end
+      # ready to dispatch
+      headers = {
+        "Content-Type" => "#{self.request_content_type}; charset=UTF-8"
+      }
+      headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
+      on_before_dispatch
+      request = make_http_request(self.uri, doc.to_s, headers, options[:http_options])
+      response = http_driver_instance.send_http_request(request)
+      parse_http_response(response)
     end
 
 
