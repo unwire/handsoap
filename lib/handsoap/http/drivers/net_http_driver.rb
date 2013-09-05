@@ -15,8 +15,7 @@ module Handsoap
             url = ::URI.parse(url)
           end
 
-          ::URI::Generic.send(:public, :path_query) # hackety hack
-          path = url.path_query
+          path = url.path
           # Net::HTTP will blow otherwise
           path = '/' if path.blank?
 
