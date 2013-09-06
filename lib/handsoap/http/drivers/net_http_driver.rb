@@ -15,9 +15,7 @@ module Handsoap
             url = ::URI.parse(url)
           end
 
-          path = url.path
-          # Net::HTTP will blow otherwise
-          path = '/' if path.blank?
+          path = url.request_uri
 
           http_request = case request.http_method
                          when :get
