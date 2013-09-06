@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 begin
   require 'jeweler'
+  #require 'rubygems'
+  #gem :jeweler
   Jeweler::Tasks.new do |gemspec|
     gemspec.name = "handsoap"
     gemspec.summary = "Handsoap is a library for creating SOAP clients in Ruby"
@@ -13,8 +15,9 @@ begin
     gemspec.files = FileList['lib/**/*.rb', 'generators/handsoap/templates', 'generators/**/*', '[A-Z]*.*'].to_a
   end
   Jeweler::GemcutterTasks.new
-rescue LoadError
-  puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
+rescue LoadError => err
+  puts "Jeweler not available. Install it with: sudo gem install jeweler"
+  p err
 end
 
 desc "Generates API documentation"
