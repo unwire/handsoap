@@ -52,6 +52,8 @@ module Handsoap
           # debug_output = StringIO.new
           # http_client.set_debug_output debug_output
           http_response = http_client.start do |client|
+            # requesting gzipped response if server can provide it
+            http_request['Accept-Encoding'] = 'gzip'
             client.request(http_request)
           end
           # puts debug_output.string
@@ -69,7 +71,15 @@ module Handsoap
               raise "Authentication type #{auth_type} is unsupported by net/http"
             end
           end
-          parse_http_part(http_response.get_headers, http_response.body, http_response.code)
+
+          # http://stackoverflow.com/questions/13397119/ruby-nethttp-not-decoding-gzip
+          body =\
+            begin
+              Zlib::GzipReader.new(StringIO.new(http_response.body)).read
+            rescue Zlib::GzipFile::Error, Zlib::Error # Not gzipped
+              http_response.body
+            end
+          parse_http_part(http_response.get_headers, body, http_response.code)
         end
       end
     end
