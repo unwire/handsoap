@@ -24,28 +24,28 @@ module Handsoap
   def self.xml_query_driver=(driver)
     @xml_query_driver = Handsoap::XmlQueryFront.load_driver!(driver)
   end
-    
+
   # Sets the timeout
   def self.timeout=(timeout)
     @timeout = timeout
   end
 
   # fetches the timeout
-  # the default timeout is set to 60seconds  
+  # the default timeout is set to 60seconds
   def self.timeout
     @timeout || (self.timeout = 60)
   end
-  
+
   # Tell Handsoap to follow redirects
   def self.follow_redirects!
     @follow_redirects = true
   end
-  
+
   # Check whether Handsoap should follow redirects
   def self.follow_redirects?
     @follow_redirects || false
   end
-  
+
   # Sets the max number of redirects
   def self.max_redirects=(max_redirects)
     @max_redirects = max_redirects
@@ -60,51 +60,51 @@ module Handsoap
   # Wraps SOAP errors in a standard class.
   class Fault < StandardError
     attr_reader :code, :reason, :details
-    
+
     def initialize(code, reason, details)
       @code = code
       @reason = reason
       @details = details
     end
-    
+
     def to_s
       "Handsoap::Fault { :code => '#{@code}', :reason => '#{@reason}' }"
     end
-    
+
     def self.from_xml(node, options = { :namespace => nil })
       if not options[:namespace]
         raise "Missing option :namespace"
       end
-      
+
       ns = { 'env' => options[:namespace] }
-      
+
       # tries to find SOAP1.2 fault code
       fault_code = node.xpath("./env:Code/env:Value", ns).to_s
-      
+
       # if no SOAP1.2 fault code was found, try the SOAP1.1 way
       unless fault_code
         fault_code = node.xpath('./faultcode', ns).to_s
-        
+
         # if fault_code is blank, add the namespace and try again
         unless fault_code
           fault_code = node.xpath("//env:faultcode", ns).to_s
         end
       end
-      
+
       # tries to find SOAP1.2 reason
       reason = node.xpath("./env:Reason/env:Text[1]", ns).to_s
-      
+
       # if no SOAP1.2 faultstring was found, try the SOAP1.1 way
       unless reason
         reason = node.xpath('./faultstring', ns).to_s
-        
+
         # if reason is blank, add the namespace and try again
         unless reason
           reason = node.xpath("//env:faultstring", ns).to_s
         end
       end
-      
-      details = node.xpath('./detail/*', ns)  
+
+      details = node.xpath('./detail/*', ns)
       self.new(fault_code, reason, details)
     end
   end
@@ -228,7 +228,7 @@ module Handsoap
           if options[:soap_header]
             iterate_hash_array(header, options[:soap_header])
           end
-          
+
           if options[:soap_body]
             action_hash = { action => options[:soap_body] }
             iterate_hash_array(body, action_hash)
@@ -408,7 +408,7 @@ module Handsoap
         request.set_client_cert_files(http_options[:client_cert_file], http_options[:client_cert_key_file]) if http_options[:client_cert_file] && http_options[:client_cert_key_file]
         request.set_ssl_verify_mode(http_options[:ssl_verify_mode]) if http_options[:ssl_verify_mode]
       end
-      
+
       headers.each do |key, value|
         request.add_header(key, value)
       end
@@ -425,10 +425,10 @@ module Handsoap
     def parse_http_response(response)
       debug do |logger|
         logger.puts(response.inspect do |body|
-          Handsoap.pretty_format_envelope(body).chomp
+          Handsoap.pretty_format_envelope(body.force_encoding('utf-8')).chomp
         end)
       end
-      xml_document = parse_soap_response_document(response.primary_part.body)
+      xml_document = parse_soap_response_document(response.primary_part.body.force_encoding('utf-8'))
       soap_fault = parse_soap_fault(xml_document)
       # Is the response a soap-fault?
       unless soap_fault.nil?
