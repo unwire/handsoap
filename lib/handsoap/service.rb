@@ -281,8 +281,17 @@ module Handsoap
         elsif options[:soap_action] == :none
           options[:soap_action] = nil
         end
-        doc = make_envelope do |body|
-          body.add action
+        doc = make_envelope do |body,header|
+          if options[:soap_header]
+            iterate_hash_array(header, options[:soap_header])
+          end
+
+          if options[:soap_body]
+            action_hash = { action => options[:soap_body] }
+            iterate_hash_array(body, action_hash)
+          else
+            body.add(action)
+          end
         end
         dispatcher.request_block.call doc.find(action)
         # ready to dispatch
