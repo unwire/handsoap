@@ -244,7 +244,7 @@ module Handsoap
           "Content-Type" => "#{self.request_content_type}; charset=UTF-8"
         }
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
-        on_before_dispatch
+        on_before_dispatch(doc)
         request = make_http_request(self.uri, doc.to_s, headers, options[:http_options])
         response = http_driver_instance.send_http_request(request)
         parse_http_response(response)
@@ -299,7 +299,7 @@ module Handsoap
           "Content-Type" => "#{self.request_content_type}; charset=UTF-8"
         }
         headers["SOAPAction"] = options[:soap_action] unless options[:soap_action].nil?
-        on_before_dispatch
+        on_before_dispatch(doc)
         request = make_http_request(self.uri, doc.to_s, headers)
         driver = self.http_driver_instance
         if driver.respond_to? :send_http_request_async
@@ -361,7 +361,7 @@ module Handsoap
     # Hook that is called before the message is dispatched.
     #
     # You can override this to provide filtering and logging.
-    def on_before_dispatch
+    def on_before_dispatch(doc)
     end
     # Hook that is called after the http_client is created.
     #
