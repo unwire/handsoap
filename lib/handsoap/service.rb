@@ -7,6 +7,14 @@ require 'handsoap/deferred'
 
 module Handsoap
 
+  def self.store_raw_response=(boolean)
+    @store_raw_response = boolean
+  end
+
+  def self.store_raw_response?
+    !!@store_raw_response
+  end
+
   def self.http_driver
     @http_driver || (self.http_driver = :curb)
   end
@@ -118,11 +126,15 @@ module Handsoap
   end
 
   class SoapResponse
-    attr_reader :document, :http_response
-    def initialize(document, http_response)
+
+    attr_reader :document, :http_response, :raw_xml
+
+    def initialize(document, http_response, raw_xml=nil)
       @document = document
       @http_response = http_response
+      @raw_xml = raw_xml
     end
+
     def method_missing(method, *args, &block)
       if @document.respond_to?(method)
         @document.__send__ method, *args, &block
@@ -130,6 +142,7 @@ module Handsoap
         super
       end
     end
+
   end
 
   class AsyncDispatch
@@ -437,7 +450,8 @@ module Handsoap
           Handsoap.pretty_format_envelope(body.force_encoding('utf-8')).chomp
         end)
       end
-      xml_document = parse_soap_response_document(response.primary_part.body.force_encoding('utf-8'))
+      raw_xml_document = response.primary_part.body.force_encoding('utf-8')
+      xml_document = parse_soap_response_document(raw_xml_document)
       soap_fault = parse_soap_fault(xml_document)
       # Is the response a soap-fault?
       unless soap_fault.nil?
@@ -453,7 +467,9 @@ module Handsoap
       end
       # Everything seems in order.
       on_response_document(xml_document)
-      return SoapResponse.new(xml_document, response)
+      args = [xml_document, response]
+      args << raw_xml_document if Handsoap.store_raw_response?
+      return SoapResponse.new(*args)
     end
 
     # Creates a standard SOAP envelope and yields the +Body+ element.
