@@ -23,9 +23,9 @@ class HandsoapGenerator < Rails::Generator::Base
   # end
 
   def banner
-		"Generates the scaffold for a Handsoap binding." +
+      "Generates the scaffold for a Handsoap binding." +
       "\n" + "You still have to fill in most of the meat, but this gives you a head start." +
-			"\n" + "Usage: #{$0} #{spec.name} URI [BASENAME] [OPTIONS]" +
+      "\n" + "Usage: #{$0} #{spec.name} URI [BASENAME] [OPTIONS]" +
       "\n" + "    URI       URI of the WSDL to generate from" +
       "\n" + "    BASENAME  The basename to use for the service. If omitted, the name will be deducted from the URL."  +
       # "\n"  +
