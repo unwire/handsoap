@@ -89,7 +89,7 @@ The Handsoap toolbox consists of the following components.
 
 Handsoap can use either [curb](http://curb.rubyforge.org/), [Net::HTTP](http://www.ruby-doc.org/stdlib/libdoc/net/http/rdoc/index.html) or [httpclient](http://dev.ctor.org/http-access2) for HTTP-connectivity. The former is recommended, and default, but for portability you might choose one of the latter. You usually don't need to interact at the HTTP-level, but if you do (for example, if you have to use SSL), you can do so through a thin abstraction layer.
 
-For parsing XML, Handsoap defaults to use [Nokogiri](http://github.com/tenderlove/nokogiri/tree/master). Handsoap has an abstraction layer, so that you can switch between REXML, Nokogiri and ruby-libxml. Besides providing portability between these parsers, Handsop also gives some helper functions that are meaningful when parsing SOAP envelopes.
+For parsing XML, Handsoap defaults to use [Nokogiri](http://github.com/tenderlove/nokogiri/tree/master). Handsoap has an abstraction layer, so that you can switch between REXML, Nokogiri and ruby-libxml. Besides providing portability between these parsers, Handsoap also gives some helper functions that are meaningful when parsing SOAP envelopes.
 
 Finally, there is a library for generating XML, which you'll use when mapping from Ruby to SOAP. It's quite similar to [Builder](http://builder.rubyforge.org/), but is tailored towards being used for writing SOAP-messages. The name of this library is `XmlMason` and it is included/part of Handsoap.
 
