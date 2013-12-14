@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = [
     "README.markdown"
   ]
+  s.license = 'LGPL-3'
   s.files = [
     "DEPLOY.markdown",
     "README.markdown",
