@@ -118,7 +118,7 @@ module Handsoap
         if options[:attributes]
           @attributes = options[:attributes]
         end
-        if not value.nil?
+        unless value.nil?
           set_value value.to_s, options
         end
         if block_given?
